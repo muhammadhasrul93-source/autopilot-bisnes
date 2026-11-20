@@ -153,7 +153,39 @@ footer{border-top:1px solid var(--line);padding:30px 0 120px;font-size:12.5px;co
 .reveal{opacity:0;transform:translateY(24px);transition:all .7s ease}
 .reveal.on{opacity:1;transform:none}
 
+/* proof */
+.proof{background:radial-gradient(ellipse at 20% 0%,#2B1D16,#141312 60%)}
+.proof .lead{color:#CFC7BB;max-width:760px;font-size:17px}
+.pf{display:grid;grid-template-columns:1fr 1.15fr;gap:34px;align-items:center;margin-top:56px}
+.pf:nth-of-type(even) .pm{order:-1}
+.pf .tag{display:inline-flex;gap:8px;align-items:center;background:rgba(217,119,87,.14);border:1px solid rgba(217,119,87,.4);color:#F3B39B;border-radius:99px;padding:5px 12px;font:800 12px "Plus Jakarta Sans";letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+.pf h3{font-size:clamp(22px,3.4vw,30px);margin-bottom:10px}
+.pf p{color:#CFC7BB;font-size:15.5px}
+.pf ul{list-style:none;padding:0;margin:10px 0 0}
+.pf li{padding:5px 0 5px 26px;position:relative;font-size:15px;color:#E4DCD0}
+.pf li::before{content:"✳";position:absolute;left:2px;color:var(--o);font-weight:800}
+.shot{display:block;text-decoration:none;border-radius:14px;overflow:hidden;border:1px solid #3A3531;background:#0e0d0c;box-shadow:0 24px 60px rgba(0,0,0,.55);position:relative}
+.shot img{width:100%}
+.shot .bar{height:26px;background:#232120;display:flex;align-items:center;gap:6px;padding:0 10px}
+.shot .bar i{width:9px;height:9px;border-radius:50%;background:#FF5F57}.shot .bar i:nth-child(2){background:#FEBC2E}.shot .bar i:nth-child(3){background:#28C840}
+.shot .bar span{font-size:11px;color:#8A847B;margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shot .zoom{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.65);color:#fff;font:700 11px "Plus Jakarta Sans";padding:4px 9px;border-radius:99px}
+.duo2{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.stack{display:grid;gap:12px}
+.phonef{max-width:250px;margin:0 auto;border-radius:30px;padding:8px;background:#0b0b0c;box-shadow:0 24px 60px rgba(0,0,0,.6),0 0 0 1px #2c2a27}
+.phonef img,.phonef video{border-radius:23px;width:100%}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 4px}
+.stats div{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.stats b{display:block;font:800 clamp(18px,3vw,24px) "Plus Jakarta Sans";color:#fff}
+.stats span{font-size:11.5px;color:var(--mut)}
+.disc{font-size:12px;color:#8A847B;margin-top:8px}
+.proofcta{text-align:center;margin-top:60px;padding:28px 20px;border:1px dashed #4A3A31;border-radius:22px;background:rgba(0,0,0,.25)}
+.proofcta h3{font-size:clamp(22px,3.6vw,30px);margin-bottom:8px}
+.proofcta p{color:#CFC7BB;margin-bottom:18px}
+
 @media (max-width:820px){
+  .pf{grid-template-columns:1fr;gap:18px;margin-top:46px}
+  .pf .pm{order:-1}
   table,tbody,tr,td{display:block;width:100%}
   table tr:first-child{display:none}
   tr{border-bottom:1px solid var(--line);padding:12px 14px}
@@ -244,6 +276,115 @@ footer{border-top:1px solid var(--line);padding:30px 0 120px;font-size:12.5px;co
    <div class="nt">📊 Laporan iklan Meta + TikTok siap <small>8:30 pg</small></div>
    <div class="nt">💬 14 lead baharu, draf balasan sedia <small>8:31 pg</small></div>
    <div class="nt o">✳ Claude: "Semua tugasan pagi selesai." <small>8:32 pg</small></div>
+  </div>
+ </div>
+</section>
+
+<section class="proof" id="bukti">
+ <div class="wrap">
+  <span class="kick">Bukti, bukan teori</span>
+  <h2>Semua ini saya bina sendiri dengan <span class="o">Claude AI</span>.</h2>
+  <p class="lead">Saya Coach Yoi. Isi ebook ini bukan saya kutip dari YouTube. Ini sistem yang saya guna <b>setiap hari</b> untuk bisnes saya sendiri. Semua gambar di bawah ialah screenshot sebenar, diambil pada November 2026.</p>
+
+  <div class="pf reveal">
+   <div>
+    <span class="tag">🌐 Website &amp; salepage</span>
+    <h3>Riangoka.my: salepage yang dibina bersama Claude</h3>
+    <p>Web app pendidikan untuk kanak-kanak. Claude tolong saya:</p>
+    <ul>
+     <li>Reka dan tulis salepage dengan animasi</li>
+     <li>Tambah kesan "arcade" pada 38 game di dalam app</li>
+     <li>Sambung butang beli terus ke checkout Stripe, satu klik</li>
+    </ul>
+    <p style="margin-top:12px"><a href="https://riangoka.my" target="_blank" rel="noopener" style="color:var(--o);font-weight:800">Lihat sendiri: riangoka.my ↗</a></p>
+   </div>
+   <div class="pm"><div class="phonef"><img src="assets/proof/riangoka.jpg" alt="Salepage Riangoka.my di handphone" loading="lazy"></div></div>
+  </div>
+
+  <div class="pf reveal">
+   <div>
+    <span class="tag">🎮 Game dalam Claude artifact</span>
+    <h3>2 game penuh, dibina dengan "bercakap" dengan Claude</h3>
+    <p><b>Palmageddon</b> (game 3D survival di pulau zombi) dan <b>Pasar Malam Tycoon</b> (game bisnes gerai). Kedua-duanya dibina dalam Claude artifact, kemudian dimasukkan ke dalam app Riangoka.</p>
+    <p>Kalau AI boleh bina game, bayangkan apa yang ia boleh buat untuk kandungan dan iklan bisnes anda.</p>
+   </div>
+   <div class="pm stack">
+    <a class="shot" href="assets/proof/palmageddon_play.jpg" target="_blank"><div class="bar"><i></i><i></i><i></i><span>Palmageddon • Claude artifact</span></div><img src="assets/proof/palmageddon.jpg" alt="Game Palmageddon" loading="lazy"></a>
+    <div class="duo2">
+     <a class="shot" href="assets/proof/palmageddon_play.jpg" target="_blank"><img src="assets/proof/palmageddon_play.jpg" alt="Gameplay Palmageddon" loading="lazy"></a>
+     <a class="shot" href="assets/proof/pasarmalam.jpg" target="_blank"><img src="assets/proof/pasarmalam.jpg" alt="Game Pasar Malam Tycoon" loading="lazy" style="aspect-ratio:900/526;object-fit:cover;object-position:top"></a>
+    </div>
+   </div>
+  </div>
+
+  <div class="pf reveal">
+   <div>
+    <span class="tag">📈 TikTok Ads (TTAM) &amp; GMV Max</span>
+    <h3>Claude pantau iklan TikTok Shop saya 3 kali sehari</h3>
+    <div class="stats">
+     <div><b>141</b><span>order</span></div>
+     <div><b>RM10,655</b><span>jualan kasar</span></div>
+     <div><b>6.89</b><span>ROI</span></div>
+    </div>
+    <p class="disc" style="margin-bottom:12px">GMV Max kedai TikTok saya, 7 hari (13–20 Nov 2026).</p>
+    <ul>
+     <li>Baca data dan buat laporan untuk setiap iklan</li>
+     <li>Bina audience dan pilih video untuk di-boost</li>
+     <li>Tutup iklan yang rugi, ikut peraturan yang saya tetapkan</li>
+    </ul>
+    <p class="disc">Keputusan akaun saya sendiri, bukan jaminan. Hasil anda bergantung pada produk, tawaran dan bajet.</p>
+   </div>
+   <div class="pm"><a class="shot" href="assets/proof/gmvmax.jpg" target="_blank"><div class="bar"><i></i><i></i><i></i><span>ads.tiktok.com • GMV Max</span></div><img src="assets/proof/gmvmax.jpg" alt="Dashboard GMV Max TikTok" loading="lazy"><span class="zoom">🔍 Besarkan</span></a></div>
+  </div>
+
+  <div class="pf reveal">
+   <div>
+    <span class="tag">📣 Meta Ads Manager</span>
+    <h3>Iklan Facebook: kreatif, copy dan pemantauan</h3>
+    <p>Untuk Riangoka, Claude bina kreatif daripada paparan sebenar app, tulis copy iklan, dan semak prestasi setiap hari.</p>
+    <p>Iklan "paparan sebenar" yang Claude cadangkan mendapat <b>link CTR 4–8%</b>, berbanding <b>1.7%</b> untuk iklan lama.</p>
+   </div>
+   <div class="pm"><a class="shot" href="assets/proof/meta_ads.jpg" target="_blank"><div class="bar"><i></i><i></i><i></i><span>adsmanager.facebook.com</span></div><img src="assets/proof/meta_ads.jpg" alt="Meta Ads Manager" loading="lazy"><span class="zoom">🔍 Besarkan</span></a></div>
+  </div>
+
+  <div class="pf reveal">
+   <div>
+    <span class="tag">🤖 Autopost TikTok • Facebook • Threads</span>
+    <h3>Kandungan dicipta dan di-post tanpa saya buka app</h3>
+    <ul>
+     <li><b>TikTok:</b> carousel "fakta kajian" dijana automatik dan di-post melalui handphone Android. Post terbaik mencecah <b>12.7K tontonan</b>.</li>
+     <li><b>Facebook:</b> 3 poster sehari, siap dijadualkan dalam Meta Planner.</li>
+     <li><b>Threads:</b> post untuk servis automasi saya.</li>
+    </ul>
+   </div>
+   <div class="pm stack">
+    <a class="shot" href="assets/proof/tiktok_profile.jpg" target="_blank"><div class="bar"><i></i><i></i><i></i><span>tiktok.com/@coachyoi86</span></div><img src="assets/proof/tiktok_profile.jpg" alt="Profil TikTok coachyoi86 dengan carousel automatik" loading="lazy"></a>
+    <div class="duo2">
+     <a class="shot" href="assets/proof/fb_planner.jpg" target="_blank"><img src="assets/proof/fb_planner.jpg" alt="Meta Planner: 3 post sehari dijadualkan" loading="lazy"><span class="zoom">Facebook</span></a>
+     <a class="shot" href="assets/proof/threads.jpg" target="_blank"><img src="assets/proof/threads.jpg" alt="Threads coachyoi86" loading="lazy" style="aspect-ratio:1000/667;object-fit:cover;object-position:top"><span class="zoom">Threads</span></a>
+    </div>
+   </div>
+  </div>
+
+  <div class="pf reveal">
+   <div>
+    <span class="tag">🎬 Video editing</span>
+    <h3>Video "editor profesional", disunting oleh Claude</h3>
+    <ul>
+     <li>Caption 3D ikut setiap perkataan</li>
+     <li>Carta kajian beranimasi, lengkap dengan sumber</li>
+     <li>Motion graphic, zoom dan kesan bunyi</li>
+     <li>Voice over AI dalam Bahasa Melayu</li>
+    </ul>
+    <p style="margin-top:12px">Video promo di atas halaman ini pun disunting oleh Claude.</p>
+   </div>
+   <div class="pm"><div class="phonef"><video src="assets/proof/videoedit.mp4" poster="assets/proof/videoedit.jpg" muted loop playsinline autoplay preload="metadata" aria-label="Contoh video yang disunting oleh Claude"></video></div></div>
+  </div>
+
+  <div class="proofcta reveal">
+   <h3>Ebook ini mengajar cara yang <span class="o">sama</span>, langkah demi langkah.</h3>
+   <p>Prompt, tetapan dan aliran kerja yang saya guna untuk semua di atas, untuk Windows &amp; MacBook.</p>
+   <a class="cta" data-cta href="#harga">Saya nak sistem ni • RM39</a>
   </div>
  </div>
 </section>
