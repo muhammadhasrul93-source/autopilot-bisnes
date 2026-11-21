@@ -207,6 +207,12 @@ footer{border-top:1px solid var(--line);padding:30px 0 120px;font-size:12.5px;co
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal,.nt{opacity:1;transform:none}}
 </style>
+<!-- Meta Pixel: Coach Yoi Ebook -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','2749301935525051');fbq('track','PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2749301935525051&ev=PageView&noscript=1"/></noscript>
 </head>
 <body>
 
@@ -571,6 +577,9 @@ var STRIPE_URL = "https://buy.stripe.com/fZufZgcj4azHfjw3AUffy00";
   }
   addEventListener('scroll', sticky, {passive:true}); sticky();
 })();
+</script>
+<script>
+document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('[data-cta]');if(a&&a.href&&a.href.indexOf('buy.stripe.com')>-1&&window.fbq){fbq('track','InitiateCheckout',{value:39,currency:'MYR',content_name:'2 Ebook Coach Yoi',num_items:2});}},true);
 </script>
 </body>
 </html>
