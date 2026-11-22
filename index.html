@@ -207,6 +207,8 @@ footer{border-top:1px solid var(--line);padding:30px 0 120px;font-size:12.5px;co
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal,.nt{opacity:1;transform:none}}
 /* pay badges, guarantee, about, lead magnet */
+.waq{text-align:center;margin-top:18px;font-size:15px;color:#CFC7BB}.waq a{display:inline-flex;align-items:center;gap:8px;margin-top:8px;padding:12px 18px;border-radius:12px;background:#1FAF5A;color:#fff;font-weight:800;text-decoration:none}
+.about .btn2.wa{background:#1FAF5A;border-color:#1FAF5A}
 .pay{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .pay span{font:800 11px/1 "Plus Jakarta Sans",sans-serif;letter-spacing:.02em;padding:6px 8px;border-radius:6px;background:#fff;color:#1d1b19;border:1px solid #E4DED6}
 .pay .fpx{background:#0B3C8C;color:#fff;border-color:#0B3C8C}
@@ -541,7 +543,11 @@ fbq('init','2749301935525051');fbq('track','PageView');
     <p>Perjalanan saya tak mudah. Saya jatuh banyak kali dalam bisnes, sampai <b>hampir bankrap dengan hutang bank mencecah RM700 ribu</b>. Alhamdulillah, sekarang bisnes makin stabil dan <b>80% hutang dah selesai</b>.</p>
     <p>Pengajaran paling besar: owner yang buat semua kerja sendiri takkan sempat besarkan bisnes. Sebab itu sejak 2025 saya fokus <b>membantu syarikat SME automate bisnes mereka</b> dengan AI, supaya owner boleh fokus pada pertumbuhan.</p>
     <p>Ebook ini ialah sistem yang sama, diringkaskan supaya anda boleh bina sendiri: Bahasa Melayu, langkah demi langkah, tanpa jargon.</p>
-    <a class="btn2" href="https://www.tiktok.com/@coachyoi86" target="_blank" rel="noopener">Tengok TikTok saya ↗</a>
+    <p style="margin-top:6px"><b>Pemilik SME?</b> Kalau anda nak sistem automasi dibina terus untuk syarikat anda, hubungi saya:</p>
+    <a class="btn2 wa" href="https://wa.me/601151469504?text=Salam%20Coach%20Yoi%2C%20saya%20berminat%20dengan%20servis%20automasi%20untuk%20syarikat%20saya." target="_blank" rel="noopener" data-wa="servis-sme">💬 WhatsApp: Servis automasi SME</a>
+    <a class="btn2" id="emailBtn" href="#" rel="nofollow">📧 Email saya</a>
+    <a class="btn2" href="https://www.tiktok.com/@coachyoi86" target="_blank" rel="noopener">TikTok ↗</a>
+    <script>(function(){var u='muhammadhasrul93',d='gmail.com',b=document.getElementById('emailBtn');b.href='mai'+'lto:'+u+'@'+d+'?subject='+encodeURIComponent('Servis automasi SME');b.title=u+'@'+d;})();</script>
    </div>
   </div>
  </div>
@@ -585,6 +591,7 @@ fbq('init','2749301935525051');fbq('track','PageView');
   <details><summary>Apa isi ebook bonus?</summary><p>"Setup VS Code + Claude Code" (48 muka surat) membawa anda dari komputer kosong hingga projek pertama: install VS Code dan Git, pasang extension Claude Code yang asli, log masuk, kenal setiap butang, dan bina landing page bersama AI. <a href="vscode/" style="color:var(--o)">Lihat isi penuh</a>.</p></details>
   <details><summary>Ada jaminan wang dikembalikan?</summary><p>Ada. Jaminan 7 hari: jika ebook ini tak bermanfaat untuk anda, balas email pembelian dalam masa 7 hari dan bayaran RM39 dipulangkan penuh melalui Stripe.</p></details>
   <details><summary>Ada jaminan hasil?</summary><p>Tiada sesiapa yang jujur boleh menjamin hasil jualan. Apa yang ebook ini beri ialah langkah, alat dan prompt yang jelas. Hasilnya bergantung pada pelaksanaan anda.</p></details>
+  <div class="waq">Masih ada soalan sebelum beli?<br><a href="https://wa.me/601151469504?text=Salam%20Coach%20Yoi%2C%20saya%20ada%20soalan%20tentang%20ebook%20Autopilot%20Bisnes." target="_blank" rel="noopener" data-wa="soalan-ebook">💬 WhatsApp Coach Yoi</a></div>
  </div>
 </section>
 
@@ -692,5 +699,6 @@ fetch('assets/testimoni.json',{cache:'no-cache'}).then(function(r){return r.json
  document.getElementById('testimoni').classList.add('on');}).catch(function(){});
 </script>
 <script src="assets/social-proof.js" defer></script>
+<script>document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[href*="wa.me"]');if(a&&window.fbq)fbq('track','Contact',{content_name:a.dataset.wa||'whatsapp'});},true);</script>
 </body>
 </html>
