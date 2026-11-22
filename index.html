@@ -216,13 +216,14 @@ footer{border-top:1px solid var(--line);padding:30px 0 120px;font-size:12.5px;co
 .guar{display:flex;gap:12px;align-items:flex-start;margin:16px 0 4px;padding:12px 14px;border-radius:12px;background:#EAF7F0;color:#1d3b2c;font-size:14px;line-height:1.45;text-align:left}
 .guar .i{font-size:22px;line-height:1}
 .sample-link{display:block;text-align:center;margin-top:12px;font-weight:700;font-size:14px;color:#C15F3C}
-.about{display:grid;grid-template-columns:1.1fr 1fr;gap:30px;align-items:center}
-.about img{width:100%;aspect-ratio:16/9;height:auto;border-radius:18px;object-fit:cover;object-position:30% 30%;box-shadow:0 24px 60px rgba(0,0,0,.55);border:1px solid var(--line)}
+.about{max-width:760px;margin:0 auto}
+.ahead{display:flex;gap:18px;align-items:center;margin-bottom:16px}
+.ahead img{width:120px;height:120px;flex:none;border-radius:50%;object-fit:cover;border:3px solid var(--o);box-shadow:0 10px 30px rgba(0,0,0,.45)}
 .about p{color:#CFC7BB;margin:0 0 12px}
-.about .chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}.about .chips span{font-size:13px;font-weight:700;padding:6px 12px;border-radius:99px;background:rgba(217,119,87,.14);border:1px solid rgba(217,119,87,.4);color:#F3B39B}
+.about .chips{display:flex;flex-wrap:wrap;gap:8px;margin:0}.about .chips span{font-size:13px;font-weight:700;padding:6px 12px;border-radius:99px;background:rgba(217,119,87,.14);border:1px solid rgba(217,119,87,.4);color:#F3B39B}
 @media(max-width:760px){.about .chips{justify-content:center}}
 .about .btn2{display:inline-block;margin-top:6px;padding:10px 16px;border:1px solid var(--line);border-radius:10px;color:#fff;text-decoration:none;font-weight:700;font-size:14px}
-@media(max-width:760px){.about{grid-template-columns:1fr;text-align:center}}
+@media(max-width:760px){.about{text-align:center}.ahead{flex-direction:column;gap:12px}.ahead img{width:104px;height:104px}}
 .lm .card2{max-width:620px;margin:0 auto;background:var(--ink2);border:1px solid var(--line);border-radius:20px;padding:26px 22px;text-align:center}
 .lm form{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
 .lm input[type=email]{flex:1 1 240px;min-width:0;padding:15px 16px;border-radius:12px;border:1px solid var(--line);background:#141312;color:#fff;font:600 16px "Plus Jakarta Sans",sans-serif}
@@ -535,10 +536,14 @@ fbq('init','2749301935525051');fbq('track','PageView');
  <div class="wrap" style="max-width:1040px">
   <span class="kick">Siapa di sebalik ebook ini</span>
   <div class="about">
-   <img src="assets/coachyoi-present.jpg" alt="Coach Yoi menerangkan aliran automasi bisnes dengan Claude AI" loading="lazy" width="1280" height="720">
    <div>
-    <h2 style="margin-top:0">Hai, saya <span class="o">Coach Yoi</span>.</h2>
-    <div class="chips"><span>🛒 Berniaga online sejak 2011</span><span>⚙️ Servis automasi SME sejak 2025</span></div>
+    <div class="ahead">
+     <img src="assets/coachyoi-headshot.jpg" alt="Coach Yoi" loading="lazy" width="120" height="120">
+     <div>
+      <h2 style="margin:0 0 8px">Hai, saya <span class="o">Coach Yoi</span>.</h2>
+      <div class="chips"><span>🛒 Berniaga online sejak 2011</span><span>⚙️ Servis automasi SME sejak 2025</span></div>
+     </div>
+    </div>
     <p>Saya mula berniaga online pada <b>2011</b>: Shopify dropshipping, YouTube, kemudian TikTok affiliate. Di TikTok <b>@coachyoi86</b> saya juga kongsi tips bina badan.</p>
     <p>Perjalanan saya tak mudah. Saya jatuh banyak kali dalam bisnes, sampai <b>hampir bankrap dengan hutang bank mencecah RM700 ribu</b>. Alhamdulillah, sekarang bisnes makin stabil dan <b>80% hutang dah selesai</b>.</p>
     <p>Pengajaran paling besar: owner yang buat semua kerja sendiri takkan sempat besarkan bisnes. Sebab itu sejak 2025 saya fokus <b>membantu syarikat SME automate bisnes mereka</b> dengan AI, supaya owner boleh fokus pada pertumbuhan.</p>
