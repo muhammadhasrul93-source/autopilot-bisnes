@@ -1,8 +1,12 @@
 // Instagram API (Instagram Login) — post gambar/Reels, balas komen & DM.
 import { api, sleep } from "./http.js";
+import { account } from "../accounts.js";
 
 const BASE = "https://graph.instagram.com/v21.0";
-const env = () => ({ token: process.env.INSTAGRAM_ACCESS_TOKEN, userId: process.env.INSTAGRAM_USER_ID });
+const env = () => {
+  const a = account("instagram");
+  return { token: a?.accessToken || process.env.INSTAGRAM_ACCESS_TOKEN, userId: a?.userId || process.env.INSTAGRAM_USER_ID, username: a?.username };
+};
 
 async function waitReady(containerId) {
   for (let i = 0; i < 30; i++) {
@@ -19,7 +23,9 @@ export const instagram = {
   canPost: true,
   canComment: true,
   canDM: true,
+  oauth: true,
   configured: () => Boolean(env().token && env().userId),
+  accountLabel: () => env().username && `@${env().username}`,
 
   async publish({ caption, mediaUrl, mediaType }) {
     if (!mediaUrl) throw new Error("Instagram perlukan gambar atau video (URL awam).");

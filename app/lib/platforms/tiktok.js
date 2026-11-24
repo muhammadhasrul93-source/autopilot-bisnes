@@ -2,16 +2,22 @@
 // Nota: domain media mesti disahkan dalam TikTok Developer Portal, dan post awam
 // memerlukan app yang telah diaudit. API awam TikTok tidak menyokong balas komen/DM.
 import { api } from "./http.js";
+import { account } from "../accounts.js";
 
 const BASE = "https://open.tiktokapis.com/v2";
-const env = () => ({ token: process.env.TIKTOK_ACCESS_TOKEN, privacy: process.env.TIKTOK_PRIVACY_LEVEL || "SELF_ONLY" });
+const env = () => {
+  const a = account("tiktok");
+  return { token: a?.accessToken || process.env.TIKTOK_ACCESS_TOKEN, privacy: process.env.TIKTOK_PRIVACY_LEVEL || "SELF_ONLY", username: a?.username };
+};
 
 export const tiktok = {
   name: "TikTok",
   canPost: true,
   canComment: false,
   canDM: false,
+  oauth: true,
   configured: () => Boolean(env().token),
+  accountLabel: () => env().username,
 
   async publish({ caption, mediaUrl, mediaType }) {
     if (!mediaUrl) throw new Error("TikTok perlukan video atau gambar (URL awam pada domain yang disahkan).");

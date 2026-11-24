@@ -39,6 +39,10 @@ textarea{min-height:90px;resize:vertical}
 .caps textarea{min-height:140px}
 table{width:100%;border-collapse:collapse;font-size:14px}
 td,th{padding:8px 6px;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+.acct h3{margin:0 0 4px;font-size:16px}
+.qr{display:block;margin:12px auto;width:260px;max-width:100%;background:#fff;padding:8px;border-radius:8px}
+.code{font:600 26px ui-monospace,Menlo,monospace;letter-spacing:2px;text-align:center;margin:12px 0}
+ol{padding-left:20px;margin:8px 0}
 .log{font-family:ui-monospace,Menlo,monospace;font-size:12px;max-height:260px;overflow:auto}
 #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:8px;display:none;max-width:90vw}
 </style>
@@ -48,6 +52,7 @@ td,th{padding:8px 6px;border-top:1px solid var(--line);text-align:left;vertical-
   <h1>⚡ Autopilot Sosial</h1>
   <nav id="nav">
     <button data-tab="dash" class="on">Papan Pemuka</button>
+    <button data-tab="accounts">Akaun</button>
     <button data-tab="create">Cipta Kandungan</button>
     <button data-tab="posts">Jadual Post</button>
     <button data-tab="inbox">Inbox Komen &amp; DM</button>
@@ -59,8 +64,12 @@ td,th{padding:8px 6px;border-top:1px solid var(--line);text-align:left;vertical-
 <section id="dash" class="on">
   <div class="grid" id="stats"></div>
   <div class="card" style="margin-top:16px"><h2>Sambungan Platform</h2><table id="conn"></table>
-    <p class="muted">Isi kunci API dalam fail <code>.env</code> server, kemudian restart. Lihat README untuk langkah setiap platform.</p></div>
+    <p class="muted">Sambung akaun di tab <a href="#accounts" data-goto="accounts">Akaun</a>.</p></div>
   <div class="card"><h2>Log Aktiviti</h2><div class="log" id="log"></div></div>
+</section>
+
+<section id="accounts">
+  <div class="grid" id="acctCards" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))"></div>
 </section>
 
 <section id="create">
@@ -139,7 +148,7 @@ td,th{padding:8px 6px;border-top:1px solid var(--line);text-align:left;vertical-
     <table id="modes"></table>
     <label>Semak komen Threads/Instagram setiap (minit)</label><input type="number" id="sPoll" min="1" style="max-width:120px">
   </div>
-  <div class="row"><button class="btn pri" id="btnSave">Simpan tetapan</button><button class="btn" id="btnTgHook">Sambung webhook Telegram</button></div>
+  <div class="row"><button class="btn pri" id="btnSave">Simpan tetapan</button></div>
 </section>
 </main>
 <div id="toast"></div>
@@ -160,12 +169,13 @@ async function call(url, opts = {}) {
 async function busy(btn, fn) { btn.disabled = true; try { await fn(); } catch (e) { toast("❌ " + e.message, 6000); } finally { btn.disabled = false; } }
 
 // Navigasi
-$("#nav").onclick = (e) => {
-  const t = e.target.dataset.tab; if (!t) return;
+function go(t) {
   document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("on", b.dataset.tab === t));
   document.querySelectorAll("section").forEach((s) => s.classList.toggle("on", s.id === t));
-  ({ dash: loadStatus, posts: loadPosts, inbox: loadInbox, settings: loadSettings })[t]?.();
-};
+  ({ dash: loadStatus, accounts: loadAccounts, posts: loadPosts, inbox: loadInbox, settings: loadSettings })[t]?.();
+}
+$("#nav").onclick = (e) => { if (e.target.dataset.tab) go(e.target.dataset.tab); };
+document.addEventListener("click", (e) => { if (e.target.dataset.goto) { e.preventDefault(); go(e.target.dataset.goto); } });
 
 async function loadStatus() {
   STATUS = await call("/api/status");
@@ -174,7 +184,7 @@ async function loadStatus() {
     .map(([l, v]) => `<div class="card stat"><b>${v}</b><span>${l}</span></div>`).join("");
   const yes = (b) => (b ? "✅" : "—");
   $("#conn").innerHTML = `<tr><th>Platform</th><th>Status</th><th>Post</th><th>Komen</th><th>DM</th></tr>` +
-    Object.entries(STATUS.platforms).map(([k, p]) => `<tr><td>${ICON[k]} ${p.name}</td><td>${p.configured ? '<span class="pill ok">Disambung</span>' : '<span class="pill warn">Belum</span>'}</td><td>${yes(p.canPost)}</td><td>${yes(p.canComment)}</td><td>${yes(p.canDM)}</td></tr>`).join("") +
+    Object.entries(STATUS.platforms).map(([k, p]) => `<tr><td>${ICON[k]} ${p.name}</td><td>${p.configured ? `<span class="pill ok">Disambung</span> <span class="muted">${esc(p.account)}</span>` : '<span class="pill warn">Belum</span>'}</td><td>${yes(p.canPost)}</td><td>${yes(p.canComment)}</td><td>${yes(p.canDM)}</td></tr>`).join("") +
     `<tr><td>🤖 Claude AI</td><td>${STATUS.ai ? '<span class="pill ok">Aktif</span>' : '<span class="pill err">ANTHROPIC_API_KEY tiada</span>'}</td><td colspan="3" class="muted">Cipta kandungan &amp; draf balasan</td></tr>`;
   $("#log").innerHTML = STATUS.log.map((l) => `<div><span class="muted">${new Date(l.at).toLocaleString("ms-MY")}</span> ${l.level === "error" ? "❌" : "•"} ${esc(l.msg)}</div>`).join("") || '<span class="muted">Tiada aktiviti lagi.</span>';
   // isi pilihan platform
@@ -270,6 +280,86 @@ $("#btnSim").onclick = (e) => busy(e.target, async () => {
   $("#fStatus").value = ""; loadInbox();
 });
 
+// ---------- Akaun ----------
+const HELP = {
+  instagram: "Akaun Instagram mesti jenis Business atau Creator.",
+  threads: "Log masuk dengan akaun Threads/Instagram anda.",
+  tiktok: "Selepas log masuk, post akan masuk sebagai peribadi sehingga app diluluskan TikTok.",
+};
+let waTimer = null;
+async function loadAccounts() {
+  await loadStatus();
+  const P = STATUS.platforms;
+  $("#acctCards").innerHTML = ["instagram", "threads", "tiktok", "whatsapp", "telegram"].map((k) => {
+    const p = P[k];
+    const head = `<h3>${ICON[k]} ${p.name}</h3>${p.configured ? `<span class="pill ok">Disambung</span> <b>${esc(p.account)}</b>` : '<span class="pill warn">Belum disambung</span>'}`;
+    let body = "";
+    if (p.connect === "oauth") {
+      body = p.configured
+        ? `<div class="row" style="margin-top:12px"><button class="btn" data-oauth="${k}">🔁 Log masuk semula</button><button class="btn" data-disc="${k}">Putuskan</button></div>`
+        : `<p class="muted">${HELP[k]}</p><button class="btn pri" data-oauth="${k}" ${p.oauthReady ? "" : "disabled"}>Log masuk dengan ${p.name}</button>
+           ${p.oauthReady ? "" : `<p class="pill err" style="margin-top:8px">App ID/Secret ${p.name} belum diset dalam .env (sekali sahaja, lihat README)</p>`}`;
+    } else if (k === "telegram") {
+      body = p.configured
+        ? `<div class="row" style="margin-top:12px"><button class="btn" data-disc="telegram">Putuskan</button></div>`
+        : `<ol class="muted"><li>Buka @BotFather di Telegram → /newbot → salin token</li><li>Jadikan bot itu admin channel anda</li></ol>
+           <label>Token bot</label><input type="text" id="tgToken" placeholder="123456:ABC...">
+           <label>Channel (cth @namachannel)</label><input type="text" id="tgChannel" placeholder="@namachannel">
+           <div class="row" style="margin-top:10px"><button class="btn pri" id="tgSave">Sambung Telegram</button></div>`;
+    } else {
+      body = `<div id="waBox"></div>`;
+    }
+    return `<div class="card acct">${head}${body}</div>`;
+  }).join("");
+  renderWA();
+}
+async function renderWA() {
+  clearTimeout(waTimer);
+  if (!$("#waBox")) return;
+  const s = await call("/api/whatsapp/status");
+  let h = "";
+  if (s.status === "open") {
+    h = `<p>Disambung sebagai <b>+${esc(s.me?.number)}</b> ${esc(s.me?.name || "")}</p><button class="btn" data-disc="whatsapp">Nyahpaut peranti</button>`;
+  } else if (s.status === "qr" && s.qr) {
+    h = `<ol class="muted"><li>Buka WhatsApp di telefon</li><li>Tetapan → <b>Peranti dipautkan</b> → <b>Pautkan peranti</b></li><li>Imbas kod QR ini</li></ol><img class="qr" src="${s.qr}" alt="Kod QR WhatsApp"><p class="muted" style="text-align:center">QR bertukar setiap ~20 saat.</p>`;
+  } else if (s.status === "pairing" && s.pairingCode) {
+    h = `<ol class="muted"><li>Buka WhatsApp → Tetapan → <b>Peranti dipautkan</b> → <b>Pautkan peranti</b></li><li>Tekan <b>Pautkan dengan nombor telefon</b></li><li>Masukkan kod ini:</li></ol><div class="code">${esc(s.pairingCode)}</div>`;
+  } else if (s.status === "connecting") {
+    h = `<p class="muted">Menyambung…</p>`;
+  } else {
+    h = `<p class="muted">Sambung WhatsApp anda sebagai peranti dipautkan (macam WhatsApp Web). Telefon tidak perlu sentiasa online selepas dipautkan.</p>
+      <div class="row"><button class="btn pri" id="waQr">Pautkan dengan kod QR</button></div>
+      <label>Atau pautkan dengan nombor telefon (tanpa imbas)</label>
+      <div class="row"><input type="text" id="waPhone" placeholder="60123456789" style="flex:1"><button class="btn" id="waCode">Dapatkan kod</button></div>
+      <p class="muted" style="margin-top:10px">⚠️ Ini bukan API rasmi Meta. Guna untuk balas pelanggan sahaja; elakkan mesej pukal/spam supaya nombor tidak disekat.</p>`;
+  }
+  if (s.error) h = `<p class="pill err">${esc(s.error)}</p>` + h;
+  $("#waBox").innerHTML = h;
+  if (["qr", "pairing", "connecting"].includes(s.status) && $("#accounts").classList.contains("on")) {
+    waTimer = setTimeout(async () => { const before = s.status; await renderWA(); if (before !== "open" && (await call("/api/whatsapp/status")).status === "open") loadAccounts(); }, 2500);
+  }
+}
+$("#accounts").addEventListener("click", (e) => {
+  const d = e.target.dataset;
+  if (d.oauth) busy(e.target, async () => {
+    const { url } = await call(`/api/connect/${d.oauth}/start`);
+    const w = window.open(url, "oauth", "width=600,height=750");
+    if (!w) location.href = url;
+  });
+  if (d.disc && confirm("Putuskan sambungan akaun ini?")) busy(e.target, async () => { await call(`/api/connect/${d.disc}/disconnect`, { method: "POST" }); loadAccounts(); });
+  if (e.target.id === "tgSave") busy(e.target, async () => {
+    const r = await call("/api/connect/telegram", { method: "POST", body: { botToken: $("#tgToken").value, channelId: $("#tgChannel").value } });
+    toast(`✅ @${r.botUsername} disambung. ${r.webhook}`, 6000); loadAccounts();
+  });
+  if (e.target.id === "waQr") busy(e.target, async () => { await call("/api/whatsapp/link", { method: "POST", body: {} }); renderWA(); });
+  if (e.target.id === "waCode") busy(e.target, async () => {
+    const phone = $("#waPhone").value.replace(/\D/g, "");
+    if (phone.length < 9) throw new Error("Masukkan nombor dengan kod negara, cth 60123456789");
+    await call("/api/whatsapp/link", { method: "POST", body: { phone } }); renderWA();
+  });
+});
+window.addEventListener("message", (e) => { if (e.origin === location.origin && e.data === "oauth-done") loadAccounts(); });
+
 // ---------- Tetapan ----------
 async function loadSettings() {
   const s = await call("/api/settings");
@@ -284,9 +374,9 @@ $("#btnSave").onclick = (e) => busy(e.target, async () => {
   await call("/api/settings", { method: "PUT", body: { brandName: $("#sBrand").value, brandVoice: $("#sVoice").value, businessInfo: $("#sInfo").value, pollMinutes: $("#sPoll").value, replyMode } });
   toast("✅ Disimpan");
 });
-$("#btnTgHook").onclick = (e) => busy(e.target, async () => { await call("/api/telegram/set-webhook", { method: "POST" }); toast("✅ Webhook Telegram disambung"); });
 
-loadStatus().catch((e) => toast("❌ " + e.message));
+
+loadStatus().then(() => { if (location.hash === "#accounts") go("accounts"); }).catch((e) => toast("❌ " + e.message));
 setInterval(() => { if ($("#dash").classList.contains("on")) loadStatus(); if ($("#inbox").classList.contains("on") && !document.activeElement?.classList.contains("reply")) loadInbox(); }, 20000);
 </script>
 </body>

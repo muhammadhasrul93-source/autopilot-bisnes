@@ -1,9 +1,13 @@
 // Threads API — post teks/gambar/video & balas reply.
 // Nota: Threads API tiada endpoint DM.
 import { api, sleep } from "./http.js";
+import { account } from "../accounts.js";
 
 const BASE = "https://graph.threads.net/v1.0";
-const env = () => ({ token: process.env.THREADS_ACCESS_TOKEN, userId: process.env.THREADS_USER_ID });
+const env = () => {
+  const a = account("threads");
+  return { token: a?.accessToken || process.env.THREADS_ACCESS_TOKEN, userId: a?.userId || process.env.THREADS_USER_ID, username: a?.username };
+};
 
 async function createAndPublish(form) {
   const { token, userId } = env();
@@ -19,7 +23,9 @@ export const threads = {
   canPost: true,
   canComment: true,
   canDM: false,
+  oauth: true,
   configured: () => Boolean(env().token && env().userId),
+  accountLabel: () => env().username && `@${env().username}`,
 
   async publish({ caption, mediaUrl, mediaType }) {
     const text = caption.slice(0, 500);

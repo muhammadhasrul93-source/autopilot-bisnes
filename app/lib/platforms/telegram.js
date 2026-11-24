@@ -1,18 +1,32 @@
 // Telegram Bot API — post ke channel, balas DM & komen (kumpulan perbincangan channel).
 import { api } from "./http.js";
+import { account } from "../accounts.js";
 
-const env = () => ({ token: process.env.TELEGRAM_BOT_TOKEN, channel: process.env.TELEGRAM_CHANNEL_ID });
-const call = (method, body) => api(`https://api.telegram.org/bot${env().token}/${method}`, { method: "POST", body });
+const env = () => {
+  const a = account("telegram");
+  return { token: a?.botToken || process.env.TELEGRAM_BOT_TOKEN, channel: a?.channelId || process.env.TELEGRAM_CHANNEL_ID, username: a?.botUsername };
+};
+const call = (method, body, token = env().token) => api(`https://api.telegram.org/bot${token}/${method}`, { method: "POST", body });
 
 export const telegram = {
   name: "Telegram",
   canPost: true,
   canComment: true,
   canDM: true,
-  configured: () => Boolean(env().token && env().channel),
+  configured: () => Boolean(env().token),
+  accountLabel: () => env().username && `@${env().username}`,
+  token: () => env().token,
+
+  /** Sahkan token bot & channel sebelum disimpan. */
+  async verify(botToken, channelId) {
+    const me = await call("getMe", {}, botToken);
+    if (channelId) await call("getChat", { chat_id: channelId }, botToken);
+    return me.result.username;
+  },
 
   async publish({ caption, mediaUrl, mediaType }) {
     const chat_id = env().channel;
+    if (!chat_id) throw new Error("Channel Telegram belum diset");
     let r;
     if (mediaUrl && mediaType === "video") r = await call("sendVideo", { chat_id, video: mediaUrl, caption: caption.slice(0, 1024) });
     else if (mediaUrl) r = await call("sendPhoto", { chat_id, photo: mediaUrl, caption: caption.slice(0, 1024) });

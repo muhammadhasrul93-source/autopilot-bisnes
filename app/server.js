@@ -6,17 +6,15 @@ import { db, save, newId, log } from "./lib/db.js";
 import { PLATFORMS } from "./lib/platforms/index.js";
 import { generateContent, generateIdeas, aiEnabled } from "./lib/ai.js";
 import { ingest, sendReply, processEntry, publishPost, pollAll, startScheduler } from "./lib/engine.js";
+import { authorizeUrl, handleCallback, oauthReady, setAccount, removeAccount } from "./lib/accounts.js";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_URL = (process.env.PUBLIC_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 // Rahsia webhook Telegram diterbitkan dari token bot (stabil merentas restart)
-const TG_SECRET = crypto
-  .createHash("sha256")
-  .update(`tg:${process.env.TELEGRAM_BOT_TOKEN || ""}`)
-  .digest("hex")
-  .slice(0, 32);
+const tgSecret = () =>
+  crypto.createHash("sha256").update(`tg:${PLATFORMS.telegram.token() || ""}`).digest("hex").slice(0, 32);
 
 const safeEqual = (a, b) => {
   const x = Buffer.from(String(a));
@@ -26,7 +24,7 @@ const safeEqual = (a, b) => {
 
 // ---------- Webhook (awam, tanpa login) ----------
 app.post("/webhook/telegram", express.json(), async (req, res) => {
-  if (!process.env.TELEGRAM_BOT_TOKEN || !safeEqual(req.get("X-Telegram-Bot-Api-Secret-Token") || "", TG_SECRET)) return res.sendStatus(401);
+  if (!PLATFORMS.telegram.token() || !safeEqual(req.get("X-Telegram-Bot-Api-Secret-Token") || "", tgSecret())) return res.sendStatus(401);
   res.sendStatus(200);
   try {
     const item = PLATFORMS.telegram.parseUpdate(req.body);
@@ -44,7 +42,7 @@ app.get("/webhook/meta", (req, res) => {
 });
 
 app.post("/webhook/meta", express.raw({ type: "*/*" }), async (req, res) => {
-  const secret = process.env.META_APP_SECRET;
+  const secret = process.env.META_APP_SECRET || process.env.INSTAGRAM_APP_SECRET;
   if (secret) {
     const sig = req.get("X-Hub-Signature-256") || "";
     const expected = "sha256=" + crypto.createHmac("sha256", secret).update(req.body).digest("hex");
@@ -53,12 +51,7 @@ app.post("/webhook/meta", express.raw({ type: "*/*" }), async (req, res) => {
   res.sendStatus(200);
   try {
     const body = JSON.parse(req.body.toString("utf8"));
-    const items =
-      body.object === "whatsapp_business_account"
-        ? PLATFORMS.whatsapp.parseWebhook(body)
-        : body.object === "instagram"
-          ? PLATFORMS.instagram.parseWebhook(body)
-          : [];
+    const items = body.object === "instagram" ? PLATFORMS.instagram.parseWebhook(body) : [];
     for (const it of items) await ingest(it);
   } catch (e) {
     log("error", `Webhook Meta: ${e.message}`);
@@ -67,6 +60,24 @@ app.post("/webhook/meta", express.raw({ type: "*/*" }), async (req, res) => {
 
 // Fail media yang dimuat naik mesti boleh diakses awam (IG/Threads/TikTok tarik dari URL)
 app.use("/uploads", express.static(path.resolve("public/uploads")));
+
+// ---------- OAuth callback (dilindungi oleh parameter state, bukan Basic Auth) ----------
+const resultPage = (ok, msg) => `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<body style="font-family:system-ui;padding:40px;text-align:center">
+<h2>${ok ? "✅ Berjaya disambung" : "❌ Gagal menyambung"}</h2><p>${String(msg).replace(/[<>&]/g, "")}</p>
+<p><a href="/#accounts">Kembali ke dashboard</a></p>
+<script>if (window.opener) { window.opener.postMessage("oauth-done", location.origin); setTimeout(() => window.close(), 1500); }</script>`;
+
+app.get("/oauth/:platform/callback", async (req, res) => {
+  try {
+    const who = await handleCallback(req.params.platform, req.query);
+    log("info", `${PLATFORMS[req.params.platform]?.name} disambung (${who})`);
+    res.send(resultPage(true, `${PLATFORMS[req.params.platform].name}: ${who}`));
+  } catch (e) {
+    log("error", `OAuth ${req.params.platform}: ${e.message}`);
+    res.status(400).send(resultPage(false, e.message));
+  }
+});
 
 // ---------- Login (Basic Auth) untuk dashboard & API ----------
 app.use((req, res, next) => {
@@ -81,7 +92,7 @@ app.use(express.static(path.resolve("public")));
 app.use("/api", express.json({ limit: "1mb" }));
 
 const wrap = (fn) => (req, res) =>
-  Promise.resolve(fn(req, res)).catch((e) => {
+  Promise.resolve().then(() => fn(req, res)).catch((e) => {
     log("error", `${req.method} ${req.path}: ${e.message}`);
     res.status(400).json({ error: e.message });
   });
@@ -95,7 +106,16 @@ app.get("/api/status", (req, res) => {
     platforms: Object.fromEntries(
       Object.entries(PLATFORMS).map(([k, p]) => [
         k,
-        { name: p.name, configured: p.configured(), canPost: p.canPost, canComment: p.canComment, canDM: p.canDM },
+        {
+          name: p.name,
+          configured: p.configured(),
+          account: p.accountLabel?.() || "",
+          canPost: p.canPost,
+          canComment: p.canComment,
+          canDM: p.canDM,
+          connect: p.oauth ? "oauth" : p.device ? "device" : "token",
+          oauthReady: p.oauth ? oauthReady(k) : undefined,
+        },
       ])
     ),
     counts: {
@@ -254,14 +274,44 @@ app.post("/api/poll", wrap(async (req, res) => {
   res.json({ ok: true });
 }));
 
-app.post("/api/telegram/set-webhook", wrap(async (req, res) => {
-  if (!process.env.TELEGRAM_BOT_TOKEN) throw new Error("TELEGRAM_BOT_TOKEN belum diset");
-  if (!PUBLIC_URL.startsWith("https://")) throw new Error("PUBLIC_URL mesti HTTPS untuk webhook Telegram");
-  res.json(await PLATFORMS.telegram.setWebhook(PUBLIC_URL, TG_SECRET));
+// ---------- Sambung akaun ----------
+app.get("/api/connect/:platform/start", wrap((req, res) => {
+  res.json({ url: authorizeUrl(req.params.platform) });
+}));
+
+app.post("/api/connect/:platform/disconnect", wrap(async (req, res) => {
+  const p = req.params.platform;
+  if (p === "whatsapp") await PLATFORMS.whatsapp.logout();
+  else removeAccount(p);
+  log("info", `${PLATFORMS[p]?.name || p} diputuskan`);
+  res.json({ ok: true });
+}));
+
+app.post("/api/connect/telegram", wrap(async (req, res) => {
+  const botToken = String(req.body.botToken || "").trim();
+  const channelId = String(req.body.channelId || "").trim();
+  if (!botToken) throw new Error("Token bot diperlukan");
+  const botUsername = await PLATFORMS.telegram.verify(botToken, channelId);
+  setAccount("telegram", { botToken, channelId, botUsername });
+  let webhook = "Webhook tidak diset (PUBLIC_URL mesti HTTPS)";
+  if (PUBLIC_URL.startsWith("https://")) {
+    await PLATFORMS.telegram.setWebhook(PUBLIC_URL, tgSecret());
+    webhook = "Webhook disambung";
+  }
+  log("info", `Telegram disambung (@${botUsername})`);
+  res.json({ ok: true, botUsername, webhook });
+}));
+
+app.get("/api/whatsapp/status", (req, res) => res.json(PLATFORMS.whatsapp.status()));
+app.post("/api/whatsapp/link", wrap(async (req, res) => {
+  await PLATFORMS.whatsapp.link({ phone: req.body?.phone });
+  res.json(PLATFORMS.whatsapp.status());
 }));
 
 app.listen(PORT, () => {
   console.log(`Autopilot Sosial berjalan di http://localhost:${PORT}`);
   if (!ADMIN_PASSWORD) console.warn("AMARAN: ADMIN_PASSWORD tidak diset — dashboard terbuka tanpa login!");
   startScheduler();
+  PLATFORMS.whatsapp.setMessageHandler(ingest);
+  PLATFORMS.whatsapp.boot();
 });

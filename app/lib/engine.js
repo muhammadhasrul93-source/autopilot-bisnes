@@ -2,6 +2,7 @@
 import { db, save, newId, log, markSeen } from "./db.js";
 import { PLATFORMS } from "./platforms/index.js";
 import { draftReply, aiEnabled } from "./ai.js";
+import { refreshTokens } from "./accounts.js";
 
 /** Masukkan item baharu ke inbox dan proses ikut mode balasan. */
 export async function ingest(item) {
@@ -97,6 +98,7 @@ export async function publishPost(post) {
 }
 
 let lastPoll = 0;
+let lastRefresh = 0;
 let ticking = false;
 
 async function tick() {
@@ -108,6 +110,10 @@ async function tick() {
       if (post.status === "scheduled" && new Date(post.scheduledAt).getTime() <= now) {
         await publishPost(post);
       }
+    }
+    if (now - lastRefresh >= 3_600_000) {
+      lastRefresh = now;
+      await refreshTokens();
     }
     const every = Math.max(1, Number(db().settings.pollMinutes) || 5) * 60_000;
     if (now - lastPoll >= every) {
