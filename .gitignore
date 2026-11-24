@@ -1,3 +1,6 @@
 raw/
 .DS_Store
 automation/
+books.json
+packages.json
+links.json

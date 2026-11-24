@@ -125,6 +125,37 @@ tr:last-child td{border-bottom:0}
 .box .trust{justify-content:center;color:#6F6B66}
 .note{font-size:13px;color:#6F6B66;text-align:center;margin-top:12px}
 
+
+/* tiers */
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:34px;align-items:start}
+.tier{background:#FBF7F1;color:#2B2A28;border-radius:22px;padding:24px 20px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.tier.hot{border:3px solid var(--o);transform:translateY(-10px);box-shadow:0 30px 80px rgba(217,119,87,.35)}
+.tier .badge{position:absolute;top:-15px;left:50%;transform:translateX(-50%);background:var(--o);color:#fff;font:800 12px "Plus Jakarta Sans";letter-spacing:.12em;padding:6px 14px;border-radius:99px;white-space:nowrap}
+.tier .tn{font:800 26px "Plus Jakarta Sans";color:#141312;text-align:center}
+.tier .tc{text-align:center;color:#C15F3C;font-weight:800;font-size:14px}
+.cvs{display:flex;justify-content:center;margin:14px 0 6px;padding-left:22px;min-height:84px}
+.cvs img{width:58px;height:82px;object-fit:cover;border-radius:4px;margin-left:-22px;box-shadow:0 6px 16px rgba(0,0,0,.35);border:1px solid #fff}
+.tier ul{list-style:none;padding:0;margin:12px 0}
+.tier li{padding:6px 0 6px 26px;position:relative;border-bottom:1px solid #EDE5D8;font-size:14px;line-height:1.35}
+.tier li::before{content:"✓";position:absolute;left:2px;top:6px;color:#fff;background:#1E8E5A;width:17px;height:17px;border-radius:50%;font:800 11px/17px "Plus Jakarta Sans";text-align:center}
+.tier li small{color:#8A847B}
+.tier li em{font-style:normal;background:#FBE3D8;color:#C15F3C;font-size:10px;font-weight:800;padding:1px 6px;border-radius:5px;vertical-align:middle}
+.tier .price .rm{font-size:60px}
+.tier .cta{max-width:none;margin-top:10px;font-size:17px;padding:15px 16px}
+.tier:not(.hot) .cta{background:#2B2A28;box-shadow:none}
+.trustrow{max-width:640px;margin:26px auto 0;text-align:center}
+.trustrow .pay{justify-content:center}
+.singles{margin-top:46px;text-align:center}
+.singles h3{color:#fff;font-size:22px}
+.ones{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:16px}
+.one{background:#1E1C1A;border:1px solid #36322E;border-radius:14px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.one img{width:100%;max-width:120px;border-radius:5px}
+.one b{font-size:13px;line-height:1.3;color:#fff;flex:1}
+.one small{color:#8A847B;font-size:12px}
+.btn1{display:block;width:100%;background:#2E2A26;border:1px solid var(--o);color:#fff;text-decoration:none;font-weight:800;font-size:13px;padding:9px 6px;border-radius:10px}
+.btn1:hover{background:var(--o)}
+@media(max-width:900px){.tiers{grid-template-columns:1fr;max-width:460px;margin-left:auto;margin-right:auto}.tier.hot{transform:none;order:-1}.ones{grid-template-columns:repeat(2,1fr)}}
+
 /* loss */
 .loss{text-align:center}
 .race{max-width:700px;margin:26px auto 0;text-align:left}
@@ -274,7 +305,7 @@ fbq('init','2749301935525051');fbq('track','PageView');
 </head>
 <body>
 
-<div class="topbar">🎁 RM39 dapat <b>2 ebook</b>: Autopilot Bisnes + BONUS Setup VS Code &amp; Claude Code • Terus muat turun</div>
+<div class="topbar">🆕 Siri AI Coach Yoi: <b>8 ebook</b> • Pakej dari RM39 • Advance RM99 dapat semua</div>
 
 <header class="hero">
  <div class="wrap grid">
@@ -293,7 +324,7 @@ fbq('init','2749301935525051');fbq('track','PageView');
    <p class="sub">Ebook <b>"Autopilot Bisnes dengan Claude AI"</b> menunjukkan langkah demi langkah, untuk <b>Windows &amp; MacBook</b>, cara bina "pasukan AI" yang menulis kandungan, posting ke TikTok, mengawal handphone Android, menganalisis iklan dan follow-up lead untuk anda.</p>
    <div class="pills"><span>📄 62 muka surat</span><span>🖼️ Gambar langkah demi langkah</span><span>✂️ Prompt siap salin</span><span>🇲🇾 Bahasa Melayu</span><span style="border-color:var(--o);color:#F3B39B">🎁 BONUS ebook ke-2 (48 muka surat)</span></div>
    <div class="ctawrap">
-    <a class="cta" data-cta href="#harga">Ya, saya nak! Dapatkan sekarang • RM39</a>
+    <a class="cta" data-cta href="#harga">Ya, saya nak! Lihat pakej • dari RM39</a>
     <div class="trust"><span>Bayaran selamat Stripe</span><span>Akses serta-merta</span><span>Jaminan 7 hari</span></div>
     <div class="pay" aria-label="Kaedah bayaran"><span class="fpx">FPX</span><span>Online Banking</span><span>Google Pay</span><span>Apple Pay</span><span>VISA</span><span>Mastercard</span></div>
    </div>
@@ -477,7 +508,7 @@ fbq('init','2749301935525051');fbq('track','PageView');
   <div class="proofcta reveal">
    <h3>Ebook ini mengajar cara yang <span class="o">sama</span>, langkah demi langkah.</h3>
    <p>Prompt, tetapan dan aliran kerja yang saya guna untuk semua di atas, untuk Windows &amp; MacBook.</p>
-   <a class="cta" data-cta href="#harga">Saya nak sistem ni • RM39</a>
+   <a class="cta" data-cta href="#harga">Saya nak sistem ni • dari RM39</a>
   </div>
  </div>
 </section>
@@ -607,26 +638,19 @@ fbq('init','2749301935525051');fbq('track','PageView');
 </section>
 
 <section class="offer" id="harga">
- <div class="wrap">
-  <div style="text-align:center"><span class="kick">Tawaran</span><h2>Mulakan autopilot bisnes anda hari ini</h2></div>
-  <div class="box">
-   <div class="badge">PAKEJ 2 EBOOK • PDF</div>
-   <h3>Autopilot Bisnes dengan Claude AI<br><span style="font-size:17px;color:#C15F3C">+ BONUS: Setup VS Code + Claude Code</span></h3>
-   <ul>
-    <li><b>Ebook 62 muka surat</b>, 13 bab, Bahasa Melayu</li>
-    <li>Gambar langkah demi langkah untuk <b>Windows &amp; MacBook</b></li>
-    <li>Prompt siap salin untuk kandungan, iklan, lead &amp; pematuhan</li>
-    <li>Panduan kawal <b>handphone Android</b> untuk autopost</li>
-    <li>Playbook khas: affiliate, bisnes, hartanah, insurans, unit trust</li>
-    <li>Pelan Tindakan 30 Hari + Perpustakaan 20 Prompt + Senarai Semak</li>
-    <li style="background:#FBEEE8;border-radius:10px;padding:10px 10px 10px 30px;border:0;margin-top:8px"><b>🎁 BONUS: Ebook "Setup VS Code + Claude Code"</b> (48 muka surat, 40+ gambar). Install, log masuk dan bina projek pertama, langkah demi langkah untuk Windows &amp; MacBook.</li>
-   </ul>
-   <div class="price"><div class="rm"><sup>RM</sup>39</div><div class="per">Bayaran sekali sahaja • Tiada langganan</div></div>
-   <a class="cta" data-cta href="#">Dapatkan ebook sekarang ➜</a>
-   <div class="trust"><span>Bayaran selamat Stripe</span><span>Terus muat turun</span></div>
+ <div class="wrap" style="max-width:1120px">
+  <div style="text-align:center"><span class="kick">Pilih pakej</span><h2>Mulakan autopilot bisnes anda hari ini</h2><p style="color:#CFC7BB;max-width:620px;margin:0 auto">Siri AI Coach Yoi: 8 ebook Bahasa Melayu, langkah demi langkah untuk Windows &amp; MacBook, dengan prompt siap salin. Bayar sekali sahaja, tiada langganan.</p></div>
+  <div class="tiers">
+<div class="tier"><div class="tn">Basic</div><div class="tc">2 ebook PDF</div><div class="cvs"><img src="assets/covers/autopilot.jpg" alt="" loading="lazy"><img src="assets/covers/vscode.jpg" alt="" loading="lazy"></div><ul><li>Autopilot Bisnes dengan Claude AI <small>(62 m/s)</small></li><li>Setup VS Code + Claude Code <small>(48 m/s)</small></li></ul><div class="price"><div class="rm"><sup>RM</sup>39</div><div class="per">RM19.50 se-ebook</div></div><a class="cta" data-pkg="basic" data-val="39" data-n="2" href="#harga">Pilih Basic ➜</a></div><div class="tier"><div class="tn">Senior</div><div class="tc">5 ebook PDF</div><div class="cvs"><img src="assets/covers/autopilot.jpg" alt="" loading="lazy"><img src="assets/covers/vscode.jpg" alt="" loading="lazy"><img src="assets/covers/website.jpg" alt="" loading="lazy"><img src="assets/covers/whatsapp.jpg" alt="" loading="lazy"><img src="assets/covers/pejabat.jpg" alt="" loading="lazy"></div><ul><li>Autopilot Bisnes dengan Claude AI <small>(62 m/s)</small></li><li>Setup VS Code + Claude Code <small>(48 m/s)</small></li><li>Bina Website Jualan Sendiri dengan AI <em>BARU</em> <small>(45 m/s)</small></li><li>Chatbot & Follow-up WhatsApp dengan AI <em>BARU</em> <small>(48 m/s)</small></li><li>AI untuk Kerja Pejabat SME <em>BARU</em> <small>(48 m/s)</small></li></ul><div class="price"><div class="rm"><sup>RM</sup>69</div><div class="per">RM13.80 se-ebook</div></div><a class="cta" data-pkg="senior" data-val="69" data-n="5" href="#harga">Pilih Senior ➜</a></div><div class="tier hot"><div class="badge">PALING BERBALOI</div><div class="tn">Advance</div><div class="tc">8 ebook PDF</div><div class="cvs"><img src="assets/covers/autopilot.jpg" alt="" loading="lazy"><img src="assets/covers/vscode.jpg" alt="" loading="lazy"><img src="assets/covers/website.jpg" alt="" loading="lazy"><img src="assets/covers/whatsapp.jpg" alt="" loading="lazy"><img src="assets/covers/pejabat.jpg" alt="" loading="lazy"><img src="assets/covers/tiktok.jpg" alt="" loading="lazy"><img src="assets/covers/ejen.jpg" alt="" loading="lazy"><img src="assets/covers/video.jpg" alt="" loading="lazy"></div><ul><li>Autopilot Bisnes dengan Claude AI <small>(62 m/s)</small></li><li>Setup VS Code + Claude Code <small>(48 m/s)</small></li><li>Bina Website Jualan Sendiri dengan AI <em>BARU</em> <small>(45 m/s)</small></li><li>Chatbot & Follow-up WhatsApp dengan AI <em>BARU</em> <small>(48 m/s)</small></li><li>AI untuk Kerja Pejabat SME <em>BARU</em> <small>(48 m/s)</small></li><li>AI untuk Content TikTok Affiliate <em>BARU</em> <small>(42 m/s)</small></li><li>AI untuk Ejen Hartanah, Insurans & Unit Trust <em>BARU</em> <small>(45 m/s)</small></li><li>Video & Voice AI untuk Bisnes <em>BARU</em> <small>(45 m/s)</small></li></ul><div class="price"><div class="rm"><sup>RM</sup>99</div><div class="per">RM12.40 se-ebook • SEMUA ebook</div></div><a class="cta" data-pkg="advance" data-val="99" data-n="8" href="#harga">Pilih Advance ➜</a></div>
+  </div>
+  <div class="trustrow">
    <div class="pay" aria-label="Kaedah bayaran"><span class="fpx">FPX</span><span>Online Banking</span><span>Google Pay</span><span>Apple Pay</span><span>VISA</span><span>Mastercard</span></div>
-   <div class="guar"><span class="i">🛡️</span><span><b>Jaminan 7 hari wang dikembalikan.</b> Kalau ebook ini tak bermanfaat untuk anda, balas email pembelian dalam masa 7 hari dan RM39 dipulangkan penuh.</span></div>
-   <p class="note">Kedua-dua pautan muat turun dipaparkan sebaik sahaja bayaran berjaya, dan kedua-dua PDF dihantar ke e-mel anda.</p>
+   <div class="guar"><span class="i">🛡️</span><span><b>Jaminan 7 hari wang dikembalikan.</b> Kalau ebook ini tak bermanfaat untuk anda, balas email pembelian dalam masa 7 hari dan bayaran anda dipulangkan penuh.</span></div>
+   <p class="note" style="color:#9D968C">Bayaran selamat melalui Stripe. Pautan muat turun dipaparkan sebaik sahaja bayaran berjaya, dan dihantar ke e-mel anda.</p>
+  </div>
+  <div class="singles">
+   <h3>Nak satu topik sahaja? <span class="o">RM29.90</span> se-ebook</h3>
+   <div class="ones"><div class="one"><img src="assets/covers/website.jpg" alt="" loading="lazy"><b>Bina Website Jualan Sendiri dengan AI</b><small>45 muka surat</small><a class="btn1" data-pkg="satu-website" data-val="29.90" data-n="1" href="#harga">Beli RM29.90</a></div><div class="one"><img src="assets/covers/whatsapp.jpg" alt="" loading="lazy"><b>Chatbot & Follow-up WhatsApp dengan AI</b><small>48 muka surat</small><a class="btn1" data-pkg="satu-whatsapp" data-val="29.90" data-n="1" href="#harga">Beli RM29.90</a></div><div class="one"><img src="assets/covers/tiktok.jpg" alt="" loading="lazy"><b>AI untuk Content TikTok Affiliate</b><small>42 muka surat</small><a class="btn1" data-pkg="satu-tiktok" data-val="29.90" data-n="1" href="#harga">Beli RM29.90</a></div><div class="one"><img src="assets/covers/ejen.jpg" alt="" loading="lazy"><b>AI untuk Ejen Hartanah, Insurans & Unit Trust</b><small>45 muka surat</small><a class="btn1" data-pkg="satu-ejen" data-val="29.90" data-n="1" href="#harga">Beli RM29.90</a></div><div class="one"><img src="assets/covers/pejabat.jpg" alt="" loading="lazy"><b>AI untuk Kerja Pejabat SME</b><small>48 muka surat</small><a class="btn1" data-pkg="satu-pejabat" data-val="29.90" data-n="1" href="#harga">Beli RM29.90</a></div><div class="one"><img src="assets/covers/video.jpg" alt="" loading="lazy"><b>Video & Voice AI untuk Bisnes</b><small>45 muka surat</small><a class="btn1" data-pkg="satu-video" data-val="29.90" data-n="1" href="#harga">Beli RM29.90</a></div></div>
   </div>
  </div>
 </section>
@@ -639,9 +663,10 @@ fbq('init','2749301935525051');fbq('track','PageView');
   <details><summary>Perlu bayar Claude ke?</summary><p>Untuk chat asas, pelan percuma Claude boleh digunakan. Untuk automasi (Claude Code, Claude in Chrome, scheduled tasks) anda perlukan pelan berbayar, bermula daripada <b>Claude Pro (USD20 sebulan)</b> setakat November 2026. Ebook ini menerangkan pelan mana yang sesuai.</p></details>
   <details><summary>Saya guna Windows / MacBook. Boleh?</summary><p>Boleh. Setiap langkah setup ada gambar untuk kedua-duanya.</p></details>
   <details><summary>Saya guna iPhone. Masih berguna?</summary><p>Ya. Hanya Bab 6 (kawal telefon untuk autopost) memerlukan telefon Android. Bab lain (kandungan, penjadual rasmi, iklan, lead, playbook) tidak bergantung pada jenis telefon.</p></details>
-  <details><summary>Macam mana saya terima ebook?</summary><p>Selepas bayaran berjaya, anda akan dibawa ke halaman muat turun dengan <b>2 butang</b>: ebook Autopilot Bisnes dan ebook bonus Setup VS Code + Claude Code. Kedua-dua PDF juga dihantar ke email anda dalam masa ±5 minit (semak folder Promotions/Spam jika tiada). Fail PDF boleh dibaca di handphone, tablet dan komputer.</p></details>
+  <details><summary>Apa beza pakej Basic, Senior dan Advance?</summary><p><b>Basic RM39</b>: Autopilot Bisnes + Setup VS Code &amp; Claude Code. <b>Senior RM69</b>: Basic + Bina Website Jualan, Chatbot WhatsApp dan Kerja Pejabat SME (5 ebook). <b>Advance RM99</b>: kesemua 8 ebook, termasuk TikTok Affiliate, Ejen Hartanah/Insurans/Unit Trust dan Video &amp; Voice AI. Setiap ebook juga boleh dibeli satu-satu pada RM29.90.</p></details>
+  <details><summary>Macam mana saya terima ebook?</summary><p>Selepas bayaran berjaya, anda akan dibawa ke halaman muat turun dengan butang untuk setiap ebook dalam pakej anda. PDF/pautan muat turun juga dihantar ke email anda dalam masa ±5 minit (semak folder Promotions/Spam jika tiada). Fail PDF boleh dibaca di handphone, tablet dan komputer.</p></details>
   <details><summary>Apa isi ebook bonus?</summary><p>"Setup VS Code + Claude Code" (48 muka surat) membawa anda dari komputer kosong hingga projek pertama: install VS Code dan Git, pasang extension Claude Code yang asli, log masuk, kenal setiap butang, dan bina landing page bersama AI. <a href="vscode/" style="color:var(--o)">Lihat isi penuh</a>.</p></details>
-  <details><summary>Ada jaminan wang dikembalikan?</summary><p>Ada. Jaminan 7 hari: jika ebook ini tak bermanfaat untuk anda, balas email pembelian dalam masa 7 hari dan bayaran RM39 dipulangkan penuh melalui Stripe.</p></details>
+  <details><summary>Ada jaminan wang dikembalikan?</summary><p>Ada. Jaminan 7 hari: jika ebook ini tak bermanfaat untuk anda, balas email pembelian dalam masa 7 hari dan bayaran anda dipulangkan penuh melalui Stripe.</p></details>
   <details><summary>Ada jaminan hasil?</summary><p>Tiada sesiapa yang jujur boleh menjamin hasil jualan. Apa yang ebook ini beri ialah langkah, alat dan prompt yang jelas. Hasilnya bergantung pada pelaksanaan anda.</p></details>
   <div class="waq">Masih ada soalan sebelum beli?<br><a href="https://wa.me/601151469504?text=Salam%20Coach%20Yoi%2C%20saya%20ada%20soalan%20tentang%20ebook%20Autopilot%20Bisnes." target="_blank" rel="noopener" data-wa="soalan-ebook">💬 WhatsApp Coach Yoi</a></div>
  </div>
@@ -650,7 +675,7 @@ fbq('init','2749301935525051');fbq('track','PageView');
 <section style="text-align:center;padding-top:20px">
  <div class="wrap">
   <h2>Esok, pesaing anda post 3 video lagi.<br><span class="o">Anda?</span></h2>
-  <p style="color:#CFC7BB">RM39. Satu kali bayar. Mula malam ni.</p>
+  <p style="color:#CFC7BB">Dari RM39. Satu kali bayar. Mula malam ni.</p>
   <a class="cta" data-cta href="#">Ya, saya nak mula autopilot ➜</a>
  </div>
 </section>
@@ -663,17 +688,19 @@ fbq('init','2749301935525051');fbq('track','PageView');
 </footer>
 
 <div class="sticky" id="sticky">
- <div class="t"><b>2 Ebook • RM39</b>Autopilot Bisnes + BONUS Setup VS Code</div>
+ <div class="t"><b>Dari RM39</b>Basic • Senior • Advance (8 ebook)</div>
  <a class="cta" data-cta href="#">Beli sekarang</a>
 </div>
 
 <script>
 // === SET PAUTAN STRIPE DI SINI ===
 var STRIPE_URL = "https://buy.stripe.com/fZufZgcj4azHfjw3AUffy00";
+var LINKS = {basic: STRIPE_URL, senior: "https://buy.stripe.com/bJedR81Eq23bb3g1sMffy02", advance: "https://buy.stripe.com/28EcN40AmgY5fjw3AUffy03", "satu-website": "https://buy.stripe.com/aFa6oG2IuePX0oCc7qffy04", "satu-whatsapp": "https://buy.stripe.com/fZu3cu2Iu6jr4ESgnGffy05", "satu-tiktok": "https://buy.stripe.com/eVqeVc6YKazHb3gc7qffy06", "satu-ejen": "https://buy.stripe.com/14AcN40Am23b9Zc8Veffy07", "satu-pejabat": "https://buy.stripe.com/5kQ3cu2Iu37fc7k9Ziffy08", "satu-video": "https://buy.stripe.com/3cI3cu1Eq37f5IW6N6ffy09"};
 (function(){
-  document.querySelectorAll('[data-cta]').forEach(function(a){
-    if (STRIPE_URL) { a.href = STRIPE_URL; a.rel = 'noopener'; }
-    else if (a.getAttribute('href') === '#') a.href = '#harga';
+  document.querySelectorAll('[data-cta]').forEach(function(a){ a.href = '#harga'; });
+  document.querySelectorAll('[data-pkg]').forEach(function(a){
+    var u = LINKS[a.dataset.pkg];
+    if (u) { a.href = u; a.rel = 'noopener'; } else { a.style.display = 'none'; var o = a.closest('.one'); if (o) o.style.display = 'none'; }
   });
   // video
   var v = document.getElementById('vsl'), b = document.getElementById('playbtn');
@@ -710,7 +737,7 @@ var STRIPE_URL = "https://buy.stripe.com/fZufZgcj4azHfjw3AUffy00";
 })();
 </script>
 <script>
-document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('[data-cta]');if(a&&a.href&&a.href.indexOf('buy.stripe.com')>-1&&window.fbq){fbq('track','InitiateCheckout',{value:39,currency:'MYR',content_name:'2 Ebook Coach Yoi',num_items:2});}},true);
+document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('[data-pkg]');if(a&&a.href&&a.href.indexOf('buy.stripe.com')>-1&&window.fbq){fbq('track','InitiateCheckout',{value:+a.dataset.val,currency:'MYR',content_name:'Coach Yoi '+a.dataset.pkg,num_items:+a.dataset.n});}},true);
 </script>
 <script>
 fetch('assets/testimoni.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(list){
