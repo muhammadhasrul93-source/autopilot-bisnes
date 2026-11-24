@@ -4,14 +4,11 @@
 //  - reply : cari mesej tertentu dan hantar balasan yang TELAH ditetapkan (ejen tidak boleh ubah teks)
 //  - task  : arahan bebas daripada admin (cth: post video dari galeri)
 import crypto from "node:crypto";
-import Anthropic from "@anthropic-ai/sdk";
 import * as adb from "./adb.js";
 import { db, save, log, newId, upsert } from "./db.js";
-import { modelFor, fallbackFor } from "./ai.js";
+import { modelFor, fallbackFor, ai, aiEnabled } from "./ai.js";
 
 const MAX_STEPS = Number(process.env.PHONE_AGENT_MAX_STEPS) || 40;
-let client;
-const ai = () => (client ??= new Anthropic());
 
 // ---------- Giliran: telefon hanya boleh buat satu tugas pada satu masa ----------
 let chain = Promise.resolve();
@@ -84,12 +81,13 @@ Peraturan:
 - Jika muncul dialog log masuk, CAPTCHA, amaran akaun atau sesuatu yang tidak dijangka, berhenti dengan finish(success=false) dan terangkan.
 - Bergerak dengan cekap; jika sesuatu tidak dijumpai selepas beberapa cubaan, finish(success=false).
 ${mode === "scan" ? "- Mod IMBAS: anda TIDAK boleh menaip atau menghantar apa-apa. Hanya baca dan laporkan." : ""}
+${mode === "post" ? "- Mod POST: muat naik media TERBARU dari galeri (paling atas), masukkan kapsyen HANYA melalui type_reply (sekali), kemudian terbitkan sebagai post awam. Sahkan post berjaya sebelum finish." : ""}
 ${mode === "reply" ? "- Mod BALAS: hantar HANYA teks yang ditetapkan melalui type_reply, sekali sahaja, kepada mesej yang betul. Sahkan pada skrin bahawa balasan telah dihantar sebelum finish." : ""}`;
 }
 
 // ---------- Gelung ejen ----------
 async function runAgent({ mode, goal, replyText, onReport, label }) {
-  if (!process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_AUTH_TOKEN) throw new Error("ANTHROPIC_API_KEY belum diset");
+  if (!aiEnabled()) throw new Error("Claude API key belum diset (Persediaan → AI)");
   const run = { id: newId(), mode, label, goal, startedAt: new Date().toISOString(), steps: [], status: "running" };
   db().adbRuns ??= [];
   db().adbRuns.unshift(run);
@@ -99,7 +97,7 @@ async function runAgent({ mode, goal, replyText, onReport, label }) {
 
   const tools = [...BASE_TOOLS];
   if (mode === "scan") tools.splice(tools.length - 1, 0, REPORT_TOOL);
-  if (mode === "reply") tools.splice(tools.length - 1, 0, TYPE_REPLY_TOOL);
+  if (mode === "reply" || mode === "post") tools.splice(tools.length - 1, 0, TYPE_REPLY_TOOL);
   if (mode === "task") tools.splice(tools.length - 1, 0, TYPE_TEXT_TOOL);
 
   let typedReply = false;
@@ -221,7 +219,7 @@ async function runAgent({ mode, goal, replyText, onReport, label }) {
         messages.push({ role: "user", content: results });
         run.status = finished.success ? "success" : "failed";
         run.summary = finished.summary;
-        if (mode === "reply" && finished.success && !typedReply) {
+        if ((mode === "reply" || mode === "post") && finished.success && !typedReply) {
           run.status = "failed";
           run.summary = "Ejen tamat tanpa menaip balasan. " + finished.summary;
         }
@@ -297,6 +295,24 @@ export async function reply(threadRef, text) {
     })
   );
   if (run.status !== "success") throw new Error(`Ejen telefon gagal: ${run.summary}`);
+}
+
+const POST_GOALS = {
+  tiktok: "Buka TikTok. Tekan butang + (cipta), pilih 'Upload'/'Muat naik', pilih video/gambar PERTAMA (terbaru) dalam galeri, tekan Next sehingga skrin kapsyen, tekan kotak kapsyen, panggil type_reply, kemudian tekan Post.",
+  instagram: "Buka Instagram. Tekan butang + (cipta), pilih Post atau Reel ikut jenis media, pilih media PERTAMA (terbaru) dalam galeri, tekan Next sehingga skrin kapsyen, tekan kotak kapsyen, panggil type_reply, kemudian tekan Share/Kongsi.",
+  threads: "Buka Threads. Tekan butang cipta thread baharu, tekan kotak teks, panggil type_reply. Jika ada media, tekan ikon galeri dan pilih media PERTAMA (terbaru). Kemudian tekan Post.",
+  telegram: "Buka Telegram, buka channel bisnes, tekan kotak mesej, panggil type_reply, kemudian tekan hantar.",
+  whatsapp: "Buka WhatsApp, pergi ke tab Updates/Status, tekan ikon pensel (status teks) atau kamera untuk media terbaru, panggil type_reply untuk kapsyen, kemudian hantar status.",
+};
+
+/** Post kandungan melalui app di telefon. localMedia (pilihan) disalin ke galeri dahulu. */
+export async function post(app, caption, localMedia) {
+  const run = await enqueue(async () => {
+    if (localMedia) await adb.pushMedia(localMedia, `${Date.now()}${localMedia.match(/\.\w+$/)?.[0] || ".jpg"}`);
+    return runAgent({ mode: "post", label: `post ${adb.APPS[app].name}`, replyText: caption, goal: POST_GOALS[app] });
+  });
+  if (run.status !== "success") throw new Error(`Ejen telefon gagal: ${run.summary}`);
+  return { id: `phone-${run.id}` };
 }
 
 /** Arahan bebas daripada admin. */

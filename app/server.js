@@ -3,23 +3,27 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { db, save, newId, log, APP_DIR } from "./lib/db.js";
+import * as auth from "./lib/auth.js";
 import { PLATFORMS } from "./lib/platforms/index.js";
-import { generateContent, generateIdeas, aiEnabled, MODEL_CHOICES, modelFor } from "./lib/ai.js";
+import { generateContent, generateIdeas, aiEnabled, MODEL_CHOICES, modelFor, testKey } from "./lib/ai.js";
 import { sanitizeQuickReplies } from "./lib/quickReplies.js";
-import { ingest, sendReply, processEntry, publishPost, pollAll, startScheduler, scanPhone } from "./lib/engine.js";
+import { ingest, sendReply, processEntry, publishPost, pollAll, startScheduler, scanPhone, runContentAutopilot } from "./lib/engine.js";
+import { secretStatus, setSecrets } from "./lib/secrets.js";
 import * as adb from "./lib/adb.js";
 import * as phone from "./lib/phoneAgent.js";
 import { authorizeUrl, handleCallback, oauthReady, setAccount, removeAccount } from "./lib/accounts.js";
 
 const app = express();
+app.set("trust proxy", "loopback, uniquelocal"); // Cloudflare Tunnel / proxy tempatan
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_URL = (process.env.PUBLIC_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-// Keselamatan: app yang boleh dicapai dari internet MESTI ada kata laluan
-if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(PUBLIC_URL) && (!ADMIN_PASSWORD || ADMIN_PASSWORD.length < 8 || ADMIN_PASSWORD === "tukar-kata-laluan-ini")) {
-  console.error("RALAT: PUBLIC_URL ialah URL awam tetapi ADMIN_PASSWORD tidak diset / terlalu lemah (min 8 aksara). Set dalam .env.");
+// Keselamatan: jika kata laluan diset melalui .env, ia mesti kuat
+if (ADMIN_PASSWORD && (ADMIN_PASSWORD.length < 8 || ADMIN_PASSWORD === "tukar-kata-laluan-ini")) {
+  console.error("RALAT: ADMIN_PASSWORD terlalu lemah (min 8 aksara, jangan guna contoh). Tukar dalam .env, atau buang untuk tetapkan melalui halaman persediaan.");
   process.exit(1);
 }
+const IS_HTTPS = PUBLIC_URL.startsWith("https://");
 // Rahsia webhook Telegram diterbitkan dari token bot (stabil merentas restart)
 const tgSecret = () =>
   crypto.createHash("sha256").update(`tg:${PLATFORMS.telegram.token() || ""}`).digest("hex").slice(0, 32);
@@ -88,13 +92,48 @@ app.get("/oauth/:platform/callback", async (req, res) => {
   }
 });
 
-// ---------- Login (Basic Auth) untuk dashboard & API ----------
+// ---------- Log masuk (halaman login + sesi kuki) ----------
+const COOKIE = "ap_sid";
+const setCookie = (res, token, maxAge) =>
+  res.set("Set-Cookie", `${COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(maxAge / 1000)}${IS_HTTPS ? "; Secure" : ""}`);
+
+app.get("/login", (req, res) => res.sendFile(path.join(APP_DIR, "public", "login.html")));
+app.get("/api/auth/state", (req, res) =>
+  res.json({ needsSetup: auth.needsSetup(), loggedIn: auth.validSession(auth.readCookie(req, COOKIE)) })
+);
+app.post("/api/auth/setup", express.json(), (req, res) => {
+  if (auth.rateLimited(req.ip)) return res.status(429).json({ error: "Terlalu banyak cubaan. Cuba lagi selepas 15 minit." });
+  try {
+    auth.setupWithCode(req.body?.code, String(req.body?.password || ""));
+  } catch (e) {
+    auth.recordFail(req.ip);
+    return res.status(400).json({ error: e.message });
+  }
+  const s = auth.createSession();
+  setCookie(res, s.token, s.maxAge);
+  log("info", "Kata laluan admin ditetapkan");
+  res.json({ ok: true });
+});
+app.post("/api/auth/login", express.json(), (req, res) => {
+  if (auth.rateLimited(req.ip)) return res.status(429).json({ error: "Terlalu banyak cubaan. Cuba lagi selepas 15 minit." });
+  if (!auth.checkPassword(String(req.body?.password || ""))) {
+    auth.recordFail(req.ip);
+    return res.status(401).json({ error: "Kata laluan salah" });
+  }
+  const s = auth.createSession();
+  setCookie(res, s.token, s.maxAge);
+  res.json({ ok: true });
+});
+app.post("/api/auth/logout", (req, res) => {
+  auth.destroySession(auth.readCookie(req, COOKIE));
+  setCookie(res, "", 0);
+  res.json({ ok: true });
+});
+
 app.use((req, res, next) => {
-  if (!ADMIN_PASSWORD) return next();
-  const [type, b64] = (req.get("Authorization") || "").split(" ");
-  const [, pass] = type === "Basic" ? Buffer.from(b64 || "", "base64").toString().split(/:(.*)/s) : [];
-  if (pass && safeEqual(pass, ADMIN_PASSWORD)) return next();
-  res.set("WWW-Authenticate", 'Basic realm="Autopilot Sosial"').sendStatus(401);
+  if (auth.validSession(auth.readCookie(req, COOKIE))) return next();
+  if (req.path.startsWith("/api/")) return res.status(401).json({ error: "Sila log masuk", login: true });
+  res.redirect("/login");
 });
 
 app.use(express.static(path.join(APP_DIR, "public")));
@@ -111,7 +150,7 @@ app.get("/api/status", (req, res) => {
   res.json({
     publicUrl: PUBLIC_URL,
     ai: aiEnabled(),
-    authProtected: Boolean(ADMIN_PASSWORD),
+    authProtected: true,
     platforms: Object.fromEntries(
       Object.entries(PLATFORMS).map(([k, p]) => [
         k,
@@ -128,8 +167,10 @@ app.get("/api/status", (req, res) => {
         },
       ])
     ),
+    onboarded: Boolean(d.settings.onboarded),
     counts: {
       scheduled: d.posts.filter((p) => p.status === "scheduled").length,
+      awaitingApproval: d.posts.filter((p) => p.status === "pending_approval").length,
       published: d.posts.filter((p) => p.status === "published").length,
       pending: d.inbox.filter((e) => ["drafted", "needs_human", "new", "error"].includes(e.status)).length,
       sentToday: d.inbox.filter((e) => e.status === "sent" && e.repliedAt?.slice(0, 10) === new Date().toISOString().slice(0, 10)).length,
@@ -147,6 +188,20 @@ app.put("/api/settings", wrap((req, res) => {
   for (const k of ["brandName", "brandVoice", "businessInfo"]) if (typeof b[k] === "string") s[k] = b[k];
   if (b.pollMinutes) s.pollMinutes = Math.max(1, Number(b.pollMinutes));
   if (b.quickReplies) s.quickReplies = sanitizeQuickReplies(b.quickReplies);
+  if (typeof b.onboarded === "boolean") s.onboarded = b.onboarded;
+  if (b.connectVia) {
+    for (const [k, v] of Object.entries(b.connectVia)) if (k in s.connectVia && ["api", "phone", ""].includes(v)) s.connectVia[k] = v;
+  }
+  if (b.contentAuto) {
+    const c = s.contentAuto, n = b.contentAuto;
+    if (typeof n.enabled === "boolean") c.enabled = n.enabled;
+    if (Array.isArray(n.platforms)) c.platforms = n.platforms.filter((p) => PLATFORMS[p]);
+    if (Array.isArray(n.days)) c.days = n.days.map(Number).filter((d) => d >= 0 && d <= 6);
+    if (/^\d{2}:\d{2}$/.test(n.time || "")) c.time = n.time;
+    if (typeof n.pillars === "string") c.pillars = n.pillars.slice(0, 500);
+    if (["approve", "auto"].includes(n.mode)) c.mode = n.mode;
+    if (typeof n.timezone === "string" && n.timezone) c.timezone = n.timezone;
+  }
   if (b.models) {
     for (const k of ["reply", "phone", "content"]) {
       if (k in b.models) s.models[k] = MODEL_CHOICES.includes(b.models[k]) ? b.models[k] : "";
@@ -188,7 +243,40 @@ app.post("/api/upload", express.raw({ type: ["image/*", "video/*"], limit: "200m
   fs.mkdirSync(dir, { recursive: true });
   const name = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}.${ext}`;
   fs.writeFileSync(path.join(dir, name), req.body);
-  res.json({ url: `${PUBLIC_URL}/uploads/${name}`, mediaType: req.get("Content-Type").startsWith("video") ? "video" : "image" });
+  const out = { url: `${PUBLIC_URL}/uploads/${name}`, mediaType: req.get("Content-Type").startsWith("video") ? "video" : "image" };
+  if (req.query.library) {
+    // Tambah ke pustaka media autopilot
+    const item = { id: newId(), url: out.url, file: name, type: out.mediaType, name: String(req.query.name || name).slice(0, 120), addedAt: new Date().toISOString(), usedAt: null };
+    db().media.unshift(item);
+    save();
+    out.item = item;
+  }
+  res.json(out);
+}));
+
+// ---------- Pustaka media & autopilot kandungan ----------
+app.get("/api/media", (req, res) => res.json(db().media ?? []));
+app.delete("/api/media/:id", wrap((req, res) => {
+  const m = db().media.find((x) => x.id === req.params.id);
+  if (!m) throw new Error("Media tidak dijumpai");
+  db().media = db().media.filter((x) => x.id !== m.id);
+  if (m.file && !db().posts.some((p) => p.mediaUrl === m.url)) fs.rmSync(path.join(APP_DIR, "public/uploads", path.basename(m.file)), { force: true });
+  save();
+  res.json({ ok: true });
+}));
+app.post("/api/content-auto/run", wrap(async (req, res) => {
+  res.json(await runContentAutopilot({ force: true }));
+}));
+
+// ---------- Rahsia (API key, App ID) ----------
+app.get("/api/secrets", (req, res) => res.json({ keys: secretStatus(), redirectBase: `${PUBLIC_URL}/oauth`, publicUrl: PUBLIC_URL }));
+app.put("/api/secrets", wrap((req, res) => {
+  setSecrets(req.body);
+  res.json({ keys: secretStatus() });
+}));
+app.post("/api/secrets/test-ai", wrap(async (req, res) => {
+  if (!aiEnabled()) throw new Error("API key belum diisi");
+  res.json(await testKey());
 }));
 
 app.get("/api/posts", (req, res) => res.json(db().posts));
@@ -383,7 +471,10 @@ app.post("/api/whatsapp/link", wrap(async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Autopilot Sosial berjalan di http://localhost:${PORT}`);
-  if (!ADMIN_PASSWORD) console.warn("AMARAN: ADMIN_PASSWORD tidak diset — dashboard terbuka tanpa login!");
+  const code = auth.ensureSetupCode();
+  if (code) {
+    console.error(`\n=== PERSEDIAAN KALI PERTAMA ===\nBuka ${PUBLIC_URL}/login dan masukkan kod persediaan: ${code}\n(Kod juga disimpan dalam data/kod-persediaan.txt)\n`);
+  }
   startScheduler();
   PLATFORMS.whatsapp.setMessageHandler(ingest);
   PLATFORMS.whatsapp.boot();

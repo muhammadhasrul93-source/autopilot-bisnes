@@ -2,6 +2,7 @@
 // Token disimpan dalam data/db.json (folder data/ TIDAK di-commit).
 import crypto from "node:crypto";
 import { db, save, log } from "./db.js";
+import { secret } from "./secrets.js";
 
 export const PUBLIC_URL = () => (process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || 3000}`).replace(/\/$/, "");
 const redirectUri = (p) => `${PUBLIC_URL()}/oauth/${p}/callback`;
@@ -36,10 +37,10 @@ async function req(url, { method = "GET", form } = {}) {
 
 // ---------- Konfigurasi app pembangun (sekali sahaja, dalam .env) ----------
 const APPS = {
-  instagram: () => ({ id: process.env.INSTAGRAM_APP_ID, secret: process.env.INSTAGRAM_APP_SECRET }),
-  threads: () => ({ id: process.env.THREADS_APP_ID, secret: process.env.THREADS_APP_SECRET }),
-  tiktok: () => ({ id: process.env.TIKTOK_CLIENT_KEY, secret: process.env.TIKTOK_CLIENT_SECRET }),
-  tiktokBiz: () => ({ id: process.env.TIKTOK_BIZ_APP_ID, secret: process.env.TIKTOK_BIZ_APP_SECRET }),
+  instagram: () => ({ id: secret("INSTAGRAM_APP_ID"), secret: secret("INSTAGRAM_APP_SECRET") }),
+  threads: () => ({ id: secret("THREADS_APP_ID"), secret: secret("THREADS_APP_SECRET") }),
+  tiktok: () => ({ id: secret("TIKTOK_CLIENT_KEY"), secret: secret("TIKTOK_CLIENT_SECRET") }),
+  tiktokBiz: () => ({ id: secret("TIKTOK_BIZ_APP_ID"), secret: secret("TIKTOK_BIZ_APP_SECRET") }),
 };
 export const oauthReady = (p) => Boolean(APPS[p]?.().id && APPS[p]().secret);
 

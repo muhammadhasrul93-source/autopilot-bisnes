@@ -22,7 +22,7 @@ section{display:none}section.on{display:block}
 .stat b{display:block;font-size:26px}
 .stat span{color:var(--muted);font-size:13px}
 label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
-input[type=text],input[type=url],input[type=datetime-local],input[type=number],textarea,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font:inherit}
+input[type=text],input[type=url],input[type=password],input[type=time],input[type=datetime-local],input[type=number],textarea,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font:inherit}
 textarea{min-height:90px;resize:vertical}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;font:inherit}
 .btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -51,6 +51,7 @@ ol{padding-left:20px;margin:8px 0}
 <header>
   <h1>⚡ Autopilot Sosial</h1>
   <nav id="nav">
+    <button data-tab="setup">🚀 Persediaan</button>
     <button data-tab="dash" class="on">Papan Pemuka</button>
     <button data-tab="accounts">Akaun</button>
     <button data-tab="phone">Telefon (ADB)</button>
@@ -59,6 +60,7 @@ ol{padding-left:20px;margin:8px 0}
     <button data-tab="inbox">Inbox Komen &amp; DM</button>
     <button data-tab="settings">Tetapan</button>
   </nav>
+  <button class="btn" id="btnLogout" style="margin-left:auto">Log keluar</button>
 </header>
 <main>
 
@@ -149,7 +151,15 @@ ol{padding-left:20px;margin:8px 0}
   </div>
 </section>
 
+<section id="setup"><div id="wiz"></div></section>
+
 <section id="posts">
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">🤖 Autopilot kandungan</h2><span id="caState"></span></div>
+    <p class="muted" id="caInfo"></p>
+    <div class="row"><button class="btn pri" id="caRun">✨ Jana post sekarang</button><button class="btn" data-goto="setup">Ubah jadual</button></div>
+  </div>
+  <div class="card"><h2>🖼️ Pustaka media</h2><p class="muted">Gambar/video untuk autopilot. Setiap post menggunakan media yang belum digunakan, mengikut urutan. Instagram &amp; TikTok perlukan media.</p><div id="mediaLibPosts"></div></div>
   <div class="card"><h2>Semua Post</h2><div id="postList"></div></div>
 </section>
 
@@ -217,6 +227,7 @@ function toast(msg, ms = 3500) { const t = $("#toast"); t.textContent = msg; t.s
 async function call(url, opts = {}) {
   const res = await fetch(url, { headers: opts.body && !(opts.body instanceof Blob) ? { "Content-Type": "application/json" } : opts.headers, ...opts, body: opts.body && !(opts.body instanceof Blob) ? JSON.stringify(opts.body) : opts.body });
   const data = await res.json().catch(() => ({}));
+  if (res.status === 401 && data.login) { location.href = "/login"; throw new Error("Sila log masuk"); }
   if (!res.ok) throw new Error(data.error || res.statusText);
   return data;
 }
@@ -226,7 +237,9 @@ async function busy(btn, fn) { btn.disabled = true; try { await fn(); } catch (e
 function go(t) {
   document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("on", b.dataset.tab === t));
   document.querySelectorAll("section").forEach((s) => s.classList.toggle("on", s.id === t));
-  ({ dash: loadStatus, phone: loadPhone, accounts: loadAccounts, posts: loadPosts, inbox: loadInbox, settings: loadSettings })[t]?.();
+  if (t !== "accounts") $("#acctCards").innerHTML = "";
+  if (t !== "setup") $("#wiz").innerHTML = "";
+  ({ setup: loadWizard, dash: loadStatus, phone: loadPhone, accounts: loadAccounts, posts: loadPosts, inbox: loadInbox, settings: loadSettings })[t]?.();
 }
 $("#nav").onclick = (e) => { if (e.target.dataset.tab) go(e.target.dataset.tab); };
 document.addEventListener("click", (e) => { if (e.target.dataset.goto) { e.preventDefault(); go(e.target.dataset.goto); } });
@@ -286,15 +299,20 @@ $("#btnSched").onclick = (e) => busy(e.target, async () => {
 });
 
 // ---------- Post ----------
-const pstat = { draft: "", scheduled: "warn", publishing: "warn", published: "ok", partial: "warn", failed: "err" };
+const pstat = { draft: "", scheduled: "warn", publishing: "warn", published: "ok", partial: "warn", failed: "err", pending_approval: "warn" };
+const PSTAT_LABEL = { draft: "Draf", scheduled: "Dijadual", publishing: "Sedang terbit…", published: "Diterbitkan", partial: "Sebahagian", failed: "Gagal", pending_approval: "Menunggu kelulusan" };
 async function loadPosts() {
-  const posts = await call("/api/posts");
+  const [posts, st] = await Promise.all([call("/api/posts"), call("/api/settings")]);
+  const ca = st.contentAuto; const DAYN = ["Ahd", "Isn", "Sel", "Rab", "Kha", "Jum", "Sab"];
+  $("#caState").innerHTML = ca.enabled ? '<span class="pill ok">Aktif</span>' : '<span class="pill">Mati</span>';
+  $("#caInfo").textContent = ca.enabled ? `${ca.days.map((d) => DAYN[d]).join(", ")} jam ${ca.time} · ${ca.platforms.join(", ")} · ${ca.mode === "auto" ? "terus terbit" : "tunggu kelulusan anda"}` : "Hidupkan dalam Persediaan untuk jana & post kandungan secara automatik.";
+  renderMediaLib("#mediaLibPosts");
   $("#postList").innerHTML = posts.map((p) => `<div class="item">
-    <div class="row" style="justify-content:space-between"><b>${esc(p.title || p.brief.slice(0, 60) || "(tiada tajuk)")}</b><span class="pill ${pstat[p.status]}">${p.status}</span></div>
+    <div class="row" style="justify-content:space-between"><b>${esc(p.title || p.brief.slice(0, 60) || "(tiada tajuk)")}</b><span class="pill ${pstat[p.status]}">${PSTAT_LABEL[p.status] || p.status}</span></div>
     <div class="muted">${p.platforms.map((k) => ICON[k] + " " + k + (p.results?.[k] ? (p.results[k].ok ? " ✅" : " ❌ " + esc(p.results[k].error)) : "")).join(" · ")}</div>
     ${p.scheduledAt ? `<div class="muted">Jadual: ${new Date(p.scheduledAt).toLocaleString("ms-MY")}</div>` : ""}
-    <details><summary class="muted">Lihat kapsyen</summary>${Object.entries(p.captions).map(([k, v]) => `<p><b>${ICON[k]}</b> <span class="msg">${esc(v)}</span></p>`).join("")}${p.mediaUrl ? `<p class="muted">Media: ${esc(p.mediaUrl)}</p>` : ""}</details>
-    <div class="row" style="margin-top:6px">${p.status !== "published" ? `<button class="btn" data-pub="${p.id}">🚀 Terbit sekarang</button>` : ""}<button class="btn" data-del="${p.id}">🗑️ Padam</button></div>
+    <details><summary class="muted">Lihat kapsyen</summary>${Object.entries(p.captions).map(([k, v]) => `<p><b>${ICON[k]}</b> <span class="msg">${esc(v)}</span></p>`).join("")}${p.mediaUrl ? `<p class="muted">Media: ${esc(p.mediaUrl)}</p>` : ""}${p.visualIdea ? `<p class="muted">Idea visual: ${esc(p.visualIdea)}</p>` : ""}</details>
+    <div class="row" style="margin-top:6px">${p.status !== "published" ? `<button class="btn ${p.status === "pending_approval" ? "pri" : ""}" data-pub="${p.id}">${p.status === "pending_approval" ? "✅ Luluskan &amp; terbit" : "🚀 Terbit sekarang"}</button>` : ""}<button class="btn" data-del="${p.id}">🗑️ Padam</button></div>
   </div>`).join("") || '<span class="muted">Belum ada post.</span>';
 }
 $("#postList").onclick = (e) => {
@@ -341,10 +359,15 @@ const HELP = {
   tiktok: "Untuk post video. Post akan masuk sebagai peribadi sehingga app diluluskan TikTok.",
 };
 let waTimer = null;
-async function loadAccounts() {
+let acctTarget = "#acctCards", acctOnly = null;
+const refreshAcct = () => loadAccounts(acctTarget, acctOnly);
+async function loadAccounts(target = "#acctCards", only = null) {
+  acctTarget = target; acctOnly = only;
   await loadStatus();
   const P = STATUS.platforms;
-  $("#acctCards").innerHTML = ["instagram", "threads", "tiktok", "whatsapp", "telegram"].map((k) => {
+  const el = $(target); if (!el) return;
+  el.classList.add("acct-area");
+  el.innerHTML = ["instagram", "threads", "tiktok", "whatsapp", "telegram"].filter((k) => !only || only.includes(k)).map((k) => {
     const p = P[k];
     const head = `<h3>${ICON[k]} ${p.name}</h3>${p.configured ? `<span class="pill ok">Disambung</span> <b>${esc(p.account)}</b>` : '<span class="pill warn">Belum disambung</span>'}`;
     let body = "";
@@ -352,7 +375,7 @@ async function loadAccounts() {
       body = p.configured
         ? `<div class="row" style="margin-top:12px"><button class="btn" data-oauth="${k}">🔁 Log masuk semula</button><button class="btn" data-disc="${k}">Putuskan</button></div>`
         : `<p class="muted">${HELP[k]}</p><button class="btn pri" data-oauth="${k}" ${p.oauthReady ? "" : "disabled"}>Log masuk dengan ${p.name}</button>
-           ${p.oauthReady ? "" : `<p class="pill err" style="margin-top:8px">App ID/Secret ${p.name} belum diset dalam .env (sekali sahaja, lihat README)</p>`}`;
+           ${p.oauthReady ? "" : `<p class="pill err" style="margin-top:8px">Isi App ID/Secret ${p.name} dahulu (Persediaan → Sambung, atau .env)</p>`}`;
     } else if (k === "telegram") {
       body = p.configured
         ? `<div class="row" style="margin-top:12px"><button class="btn" data-disc="telegram">Putuskan</button></div>`
@@ -369,7 +392,7 @@ async function loadAccounts() {
         (p.commentsConnected
           ? `<div class="row"><button class="btn" data-oauth="tiktokBiz">🔁 Log masuk semula</button><button class="btn" data-disc="tiktokBiz">Putuskan</button></div>`
           : `<p class="muted">Guna TikTok API for Business. Akaun mesti TikTok Business.</p><button class="btn pri" data-oauth="tiktokBiz" ${p.commentsOauthReady ? "" : "disabled"}>Log masuk TikTok untuk balas komen</button>
-             ${p.commentsOauthReady ? "" : '<p class="pill err" style="margin-top:8px">TIKTOK_BIZ_APP_ID/SECRET belum diset dalam .env</p>'}`);
+             ${p.commentsOauthReady ? "" : '<p class="pill err" style="margin-top:8px">Isi TikTok Business App ID/Secret dahulu (Persediaan)</p>'}`);
     }
     return `<div class="card acct">${head}${body}</div>`;
   }).join("");
@@ -397,21 +420,22 @@ async function renderWA() {
   }
   if (s.error) h = `<p class="pill err">${esc(s.error)}</p>` + h;
   $("#waBox").innerHTML = h;
-  if (["qr", "pairing", "connecting"].includes(s.status) && $("#accounts").classList.contains("on")) {
-    waTimer = setTimeout(async () => { const before = s.status; await renderWA(); if (before !== "open" && (await call("/api/whatsapp/status")).status === "open") loadAccounts(); }, 2500);
+  if (["qr", "pairing", "connecting"].includes(s.status) && $("#waBox")?.offsetParent) {
+    waTimer = setTimeout(async () => { await renderWA(); if ((await call("/api/whatsapp/status")).status === "open") refreshAcct(); }, 2500);
   }
 }
-$("#accounts").addEventListener("click", (e) => {
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".acct-area")) return;
   const d = e.target.dataset;
   if (d.oauth) busy(e.target, async () => {
     const { url } = await call(`/api/connect/${d.oauth}/start`);
     const w = window.open(url, "oauth", "width=600,height=750");
     if (!w) location.href = url;
   });
-  if (d.disc && confirm("Putuskan sambungan akaun ini?")) busy(e.target, async () => { await call(`/api/connect/${d.disc}/disconnect`, { method: "POST" }); loadAccounts(); });
+  if (d.disc && confirm("Putuskan sambungan akaun ini?")) busy(e.target, async () => { await call(`/api/connect/${d.disc}/disconnect`, { method: "POST" }); refreshAcct(); });
   if (e.target.id === "tgSave") busy(e.target, async () => {
     const r = await call("/api/connect/telegram", { method: "POST", body: { botToken: $("#tgToken").value, channelId: $("#tgChannel").value } });
-    toast(`✅ @${r.botUsername} disambung. ${r.webhook}`, 6000); loadAccounts();
+    toast(`✅ @${r.botUsername} disambung. ${r.webhook}`, 6000); refreshAcct();
   });
   if (e.target.id === "waQr") busy(e.target, async () => { await call("/api/whatsapp/link", { method: "POST", body: {} }); renderWA(); });
   if (e.target.id === "waCode") busy(e.target, async () => {
@@ -420,7 +444,7 @@ $("#accounts").addEventListener("click", (e) => {
     await call("/api/whatsapp/link", { method: "POST", body: { phone } }); renderWA();
   });
 });
-window.addEventListener("message", (e) => { if (e.origin === location.origin && e.data === "oauth-done") loadAccounts(); });
+window.addEventListener("message", (e) => { if (e.origin === location.origin && e.data === "oauth-done") refreshAcct(); });
 
 // ---------- Telefon (ADB) ----------
 const RUNST = { running: ["Berjalan…", "warn"], success: ["Berjaya", "ok"], failed: ["Gagal", "err"], error: ["Ralat", "err"] };
@@ -497,5 +521,6 @@ $("#btnSave").onclick = (e) => busy(e.target, async () => {
 loadStatus().then(() => { if (location.hash === "#accounts") go("accounts"); }).catch((e) => toast("❌ " + e.message));
 setInterval(() => { if ($("#dash").classList.contains("on")) loadStatus(); if ($("#inbox").classList.contains("on") && !document.activeElement?.classList.contains("reply")) loadInbox(); }, 20000);
 </script>
+<script src="/wizard.js"></script>
 </body>
 </html>

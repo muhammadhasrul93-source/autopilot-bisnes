@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Log Masuk · Autopilot Sosial</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#1c1f24;--muted:#69707d;--line:#e3e6eb;--accent:#0f766e;--err:#b91c1c;--err-bg:#fee2e2}
+@media (prefers-color-scheme:dark){:root{--bg:#111418;--card:#1a1e24;--text:#e8eaed;--muted:#9aa1ac;--line:#2b313a;--accent:#2dd4bf;--err:#f87171;--err-bg:#450a0a}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:16px;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text)}
+.card{width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px}
+h1{font-size:20px;margin:0 0 4px}
+p{color:var(--muted);margin:0 0 18px;font-size:14px}
+label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
+input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font:inherit}
+button{width:100%;margin-top:18px;padding:11px;border:0;border-radius:8px;background:var(--accent);color:#fff;font:600 15px system-ui,sans-serif;cursor:pointer}
+@media (prefers-color-scheme:dark){button{color:#04201d}}
+button:disabled{opacity:.6}
+.err{display:none;margin-top:12px;padding:8px 10px;border-radius:8px;background:var(--err-bg);color:var(--err);font-size:14px}
+code{background:var(--bg);padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<form class="card" id="f" autocomplete="on">
+  <h1>⚡ Autopilot Sosial</h1>
+  <p id="sub">Log masuk ke dashboard</p>
+  <div id="setupFields" style="display:none">
+    <label for="code">Kod persediaan</label>
+    <input id="code" inputmode="numeric" autocomplete="one-time-code" placeholder="6 digit">
+    <p style="margin:6px 0 0;font-size:12px">Kod dipaparkan dalam terminal semasa server dimulakan, dan disimpan dalam <code>data/kod-persediaan.txt</code>.</p>
+  </div>
+  <label for="pw">Kata laluan</label>
+  <input id="pw" type="password" autocomplete="current-password" required>
+  <div id="pw2Wrap" style="display:none"><label for="pw2">Ulang kata laluan</label><input id="pw2" type="password" autocomplete="new-password"></div>
+  <button id="go">Log masuk</button>
+  <div class="err" id="err"></div>
+</form>
+<script>
+const $ = (s) => document.querySelector(s);
+let setup = false;
+fetch("/api/auth/state").then((r) => r.json()).then((s) => {
+  if (s.loggedIn) return (location.href = "/");
+  setup = s.needsSetup;
+  if (setup) {
+    $("#sub").textContent = "Persediaan kali pertama: cipta kata laluan admin (min 8 aksara).";
+    $("#setupFields").style.display = $("#pw2Wrap").style.display = "block";
+    $("#pw").autocomplete = "new-password";
+    $("#go").textContent = "Cipta kata laluan & mula";
+    $("#code").focus();
+  } else $("#pw").focus();
+});
+$("#f").onsubmit = async (e) => {
+  e.preventDefault();
+  $("#err").style.display = "none";
+  if (setup && $("#pw").value !== $("#pw2").value) return showErr("Kata laluan tidak sama");
+  $("#go").disabled = true;
+  try {
+    const r = await fetch(setup ? "/api/auth/setup" : "/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: $("#code").value, password: $("#pw").value }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || "Gagal");
+    location.href = "/";
+  } catch (err) {
+    showErr(err.message);
+  } finally {
+    $("#go").disabled = false;
+  }
+};
+function showErr(m) { $("#err").textContent = m; $("#err").style.display = "block"; }
+</script>
+</body>
+</html>

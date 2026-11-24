@@ -5,6 +5,27 @@ import { draftReply, aiEnabled } from "./ai.js";
 import { refreshTokens } from "./accounts.js";
 import * as phone from "./phoneAgent.js";
 import { matchQuickReply } from "./quickReplies.js";
+import { generateContent } from "./ai.js";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { APP_DIR } from "./db.js";
+
+const PUBLIC = () => (process.env.PUBLIC_URL || "").replace(/\/$/, "");
+/** Dapatkan fail tempatan untuk media (fail muat naik sendiri, atau muat turun URL). */
+async function localMediaFor(url) {
+  if (!url) return null;
+  const name = url.split("/uploads/")[1];
+  if (name && !name.includes("..")) {
+    const f = path.join(APP_DIR, "public", "uploads", path.basename(name));
+    if (fs.existsSync(f)) return f;
+  }
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Muat turun media gagal: ${res.status}`);
+  const f = path.join(os.tmpdir(), `ap-${Date.now()}${path.extname(url.split("?")[0]) || ".jpg"}`);
+  fs.writeFileSync(f, Buffer.from(await res.arrayBuffer()));
+  return f;
+}
 
 /** Masukkan item baharu ke inbox dan proses ikut mode balasan. */
 export async function ingest(item, { defer = false } = {}) {
@@ -107,9 +128,15 @@ export async function publishPost(post) {
     if (post.results[key]?.ok) continue;
     const p = PLATFORMS[key];
     try {
-      if (!p.configured()) throw new Error("Belum disambung (semak .env)");
       const caption = post.captions[key] ?? "";
-      const r = await p.publish({ caption, mediaUrl: post.mediaUrl, mediaType: post.mediaType });
+      const viaPhone = db().settings.connectVia?.[key] === "phone" || (!p.configured() && db().settings.connectVia?.[key] !== "api" && db().settings.adb.scanApps?.includes(key));
+      let r;
+      if (viaPhone) {
+        r = await phone.post(key, caption, await localMediaFor(post.mediaUrl));
+      } else {
+        if (!p.configured()) throw new Error("Belum disambung (Persediaan → Sambung akaun)");
+        r = await p.publish({ caption, mediaUrl: post.mediaUrl, mediaType: post.mediaType });
+      }
       post.results[key] = { ok: true, id: r.id, at: new Date().toISOString() };
       log("info", `Post "${post.title || post.brief.slice(0, 40)}" berjaya ke ${p.name}`);
     } catch (e) {
@@ -145,6 +172,7 @@ async function tick() {
       lastAdbScan = now;
       scanPhone(adbCfg.scanApps); // jalan di latar belakang
     }
+    await contentTick();
     if (now - lastRefresh >= 3_600_000) {
       lastRefresh = now;
       await refreshTokens();
@@ -201,6 +229,80 @@ export async function scanPhone(apps) {
       log("error", `Imbas telefon ${app}: ${e.message}`);
     }
     for (const e of found) await processEntry(e);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Autopilot kandungan
+// ---------------------------------------------------------------------------
+const NEEDS_MEDIA = new Set(["instagram", "tiktok"]);
+
+function localNow(tz) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-GB", { timeZone: tz, weekday: "short", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+      .formatToParts(new Date())
+      .map((p) => [p.type, p.value])
+  );
+  const wd = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[parts.weekday];
+  return { date: `${parts.year}-${parts.month}-${parts.day}`, day: wd, hm: `${parts.hour}:${parts.minute}` };
+}
+
+function nextMedia() {
+  const list = db().media ?? [];
+  return [...list].filter((m) => !m.usedAt).sort((a, b) => a.addedAt.localeCompare(b.addedAt))[0] ?? null;
+}
+
+/** Jana satu post autopilot sekarang (dipanggil oleh penjadual atau butang "Jana sekarang"). */
+export async function runContentAutopilot({ force = false } = {}) {
+  const c = db().settings.contentAuto;
+  if (!c.platforms?.length) throw new Error("Pilih platform untuk autopilot kandungan");
+  if (!aiEnabled()) throw new Error("Autopilot kandungan perlukan Claude API key (Persediaan → AI)");
+  const media = nextMedia();
+  const platforms = c.platforms.filter((p) => media || !NEEDS_MEDIA.has(p));
+  const skipped = c.platforms.filter((p) => !platforms.includes(p));
+  if (!platforms.length) throw new Error("Tiada media dalam pustaka untuk Instagram/TikTok — muat naik gambar/video dahulu");
+
+  const pillars = String(c.pillars || "tips berguna, cerita di sebalik tabir, testimoni sebenar, promosi produk").split(",").map((s) => s.trim()).filter(Boolean);
+  const recent = db().posts.filter((p) => p.auto).slice(0, 10);
+  const pillar = pillars[recent.length % pillars.length];
+  const g = await generateContent({
+    brief: `Post bertema "${pillar}" untuk bisnes ini${media ? ` (media: ${media.type === "video" ? "video" : "gambar"} bertajuk "${media.name}")` : ""}.`,
+    platforms,
+    extra: recent.length ? `Jangan ulang idea post terkini: ${recent.map((p) => p.title).join(" | ")}` : "",
+  });
+  const post = {
+    id: newId(),
+    title: g.idea.slice(0, 80),
+    brief: `Autopilot: ${pillar}`,
+    platforms,
+    captions: g.captions,
+    mediaUrl: media?.url || "",
+    mediaType: media?.type || "image",
+    status: c.mode === "auto" ? "publishing" : "pending_approval",
+    auto: true,
+    visualIdea: g.visualIdea,
+    results: {},
+    createdAt: new Date().toISOString(),
+  };
+  if (media) media.usedAt = new Date().toISOString();
+  db().posts.unshift(post);
+  save();
+  log("info", `Autopilot kandungan: "${post.title}" ${c.mode === "auto" ? "sedang diterbitkan" : "menunggu kelulusan"}${skipped.length ? ` (dilangkau ${skipped.join(", ")}: tiada media)` : ""}`);
+  if (c.mode === "auto") await publishPost(post);
+  return post;
+}
+
+async function contentTick() {
+  const c = db().settings.contentAuto;
+  if (!c.enabled || !c.platforms?.length) return;
+  const now = localNow(c.timezone || "Asia/Kuala_Lumpur");
+  if (!c.days.includes(now.day) || now.hm < c.time || c.lastRunDate === now.date) return;
+  c.lastRunDate = now.date;
+  save();
+  try {
+    await runContentAutopilot();
+  } catch (e) {
+    log("error", `Autopilot kandungan: ${e.message}`);
   }
 }
 

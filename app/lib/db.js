@@ -29,6 +29,11 @@ const DEFAULTS = {
     adb: { serial: "", scanApps: [], scanMinutes: 60, useAdbKeyboard: false, screenshotMode: "auto" },
     // Jawapan pantas tanpa AI: [{ keywords: "harga, price", reply: "...", kind: "all"|"comment"|"dm", platforms: [] }]
     quickReplies: [],
+    // Cara setiap platform disambung: "api" | "phone" | "" (dipilih dalam wizard)
+    connectVia: { tiktok: "", instagram: "", threads: "", whatsapp: "", telegram: "" },
+    // Autopilot kandungan: jana & post ikut jadual
+    contentAuto: { enabled: false, platforms: [], days: [1, 3, 5], time: "20:00", pillars: "", mode: "approve", timezone: "Asia/Kuala_Lumpur", lastRunDate: "" },
+    onboarded: false,
     // Model ikut tugas (kosong = lalai / .env)
     models: { reply: "", phone: "", content: "" },
   },
@@ -37,6 +42,7 @@ const DEFAULTS = {
   seen: {}, // kunci id luaran yang sudah diproses
   log: [],
   adbRuns: [],
+  media: [], // pustaka media untuk autopilot kandungan: {id, url, file, type, name, addedAt, usedAt}
 };
 
 let state;
@@ -55,6 +61,8 @@ function load() {
         replyMode: { ...DEFAULTS.settings.replyMode, ...raw.settings?.replyMode },
         adb: { ...DEFAULTS.settings.adb, ...raw.settings?.adb },
         models: { ...DEFAULTS.settings.models, ...raw.settings?.models },
+        connectVia: { ...DEFAULTS.settings.connectVia, ...raw.settings?.connectVia },
+        contentAuto: { ...DEFAULTS.settings.contentAuto, ...raw.settings?.contentAuto },
       },
     };
   } else {

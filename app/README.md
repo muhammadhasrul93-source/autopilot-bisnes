@@ -11,6 +11,21 @@ Dashboard web untuk urus **TikTok, Instagram, Threads, Telegram dan WhatsApp** d
   - **Auto hantar**: AI terus balas. Soalan yang AI tak pasti (harga tiada dalam info, aduan, refund) tetap ditahan untuk anda.
 - 🧪 **Simulasi**: uji gaya balasan AI tanpa hantar apa-apa ke platform sebenar.
 
+## Mula pantas (sekali setup)
+
+1. `cd app && npm install && npm start`. Untuk link awam, lihat [deploy/CLOUDFLARE.md](deploy/CLOUDFLARE.md).
+2. Buka link app. Masukkan **kod persediaan** dari terminal dan cipta kata laluan.
+3. **Wizard Persediaan** (6 langkah) dibuka secara automatik:
+   1. Bisnes & jawapan pantas
+   2. Otak AI (Claude API key, atau Kit Claude)
+   3. Pilih platform & cara sambung (API / telefon ADB / QR WhatsApp)
+   4. Sambung akaun
+   5. Autopilot: mod balas komen/DM, jadual kandungan, pustaka media
+   6. Hidupkan
+4. Selepas itu app berjalan sendiri:
+   - kandungan dijana & dipost ikut hari/masa (atau menunggu kelulusan anda di **Jadual Post**);
+   - komen & DM masuk ke **Inbox** dan dibalas ikut mod (templat → AI → anda).
+
 ## Dua cara guna
 
 | | **A. Kit Claude (disyorkan untuk pelanggan)** | **B. App web sendiri** |

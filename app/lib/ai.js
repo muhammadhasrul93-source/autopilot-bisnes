@@ -3,9 +3,18 @@ import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { db } from "./db.js";
+import { secret } from "./secrets.js";
 
-let client;
-const ai = () => (client ??= new Anthropic());
+// Klien Claude: API key dari wizard (UI) atau .env. Dicipta semula jika key bertukar.
+let client, clientKey;
+export function ai() {
+  const key = secret("ANTHROPIC_API_KEY");
+  if (!client || key !== clientKey) {
+    client = key ? new Anthropic({ apiKey: key }) : new Anthropic();
+    clientKey = key;
+  }
+  return client;
+}
 
 // Model ikut tugas (boleh ditukar di Tetapan atau .env). Draf balasan ringkas tidak perlukan model paling mahal.
 export const MODEL_CHOICES = ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"];
@@ -153,4 +162,11 @@ Peraturan:
   return res.parsed_output;
 }
 
-export const aiEnabled = () => Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
+export const aiEnabled = () => Boolean(secret("ANTHROPIC_API_KEY") || process.env.ANTHROPIC_AUTH_TOKEN);
+
+/** Uji API key dengan permintaan kecil. */
+export async function testKey() {
+  const model = modelFor("reply");
+  const r = await ai().messages.create({ model, max_tokens: 16, messages: [{ role: "user", content: "Balas: OK" }] });
+  return { ok: true, model: r.model };
+}

@@ -62,10 +62,9 @@ Simpan. Link anda ialah **https://app.coachyoi.com**.
    npm install
    cp .env.example .env
    ```
-   Edit `.env`:
+   Edit `.env`. Hanya satu baris diperlukan; selebihnya diisi dalam wizard:
    ```
    PUBLIC_URL=https://app.coachyoi.com
-   ADMIN_PASSWORD=<kata laluan kuat, min 8 aksara>
    ```
 2. Pasang **cloudflared** sebagai servis (berjalan sendiri setiap kali komputer hidup):
    - Windows: muat turun `cloudflared-windows-amd64.msi` dari <https://github.com/cloudflare/cloudflared/releases>, pasang, kemudian buka **Command Prompt (Admin)**:
@@ -89,7 +88,7 @@ Simpan. Link anda ialah **https://app.coachyoi.com**.
    pm2 save
    ```
    Windows: `npm install -g pm2-windows-startup && pm2-startup install` supaya app mula bersama Windows.
-4. Buka **https://app.coachyoi.com** dan log masuk dengan **admin** / `ADMIN_PASSWORD`.
+4. Buka **https://app.coachyoi.com**. Kali pertama, masukkan **kod persediaan** yang dipaparkan dalam terminal (atau dalam `data/kod-persediaan.txt`) dan cipta kata laluan anda. Wizard **Persediaan** akan dibuka secara automatik.
 
 **Cuba pantas tanpa domain:** `npm run tunnel:cuba` memberi link sementara `https://xxxx.trycloudflare.com`. Link ini bertukar setiap kali, jadi ia tidak sesuai untuk OAuth atau webhook.
 
@@ -102,8 +101,9 @@ curl -fsSL https://get.docker.com | sh
 git clone <URL repo ini> autopilot-bisnes
 cd autopilot-bisnes/app
 cp .env.example .env
-nano .env          # isi PUBLIC_URL, ADMIN_PASSWORD, TUNNEL_TOKEN, ANTHROPIC_API_KEY, App ID/Secret
+nano .env          # isi PUBLIC_URL dan TUNNEL_TOKEN (selebihnya dalam wizard)
 docker compose -f deploy/docker-compose.yml up -d --build
+docker compose -f deploy/docker-compose.yml logs app | grep -A1 "PERSEDIAAN"   # kod persediaan
 ```
 
 - Log: `docker compose -f deploy/docker-compose.yml logs -f`
@@ -125,7 +125,7 @@ docker compose -f deploy/docker-compose.yml up -d --build
 
 ## 5. Keselamatan
 
-- App **tidak akan berjalan** dengan `PUBLIC_URL` awam jika `ADMIN_PASSWORD` kosong atau lemah.
+- Kata laluan pertama hanya boleh dicipta dengan **kod persediaan**, yang hanya pemilik server dapat lihat. Log masuk dihadkan kepada 10 cubaan setiap 15 minit, dan sesi tamat selepas 30 hari.
 - (Pilihan, lebih selamat) **Cloudflare Access**: log masuk melalui kod e-mel sebelum sampai ke app.
   1. Zero Trust → Access → Applications → Add → Self-hosted → `app.coachyoi.com`
   2. Policy: *Allow*, include *Emails* = e-mel anda
