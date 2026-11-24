@@ -1,0 +1,267 @@
+import express from "express";
+import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+import { db, save, newId, log } from "./lib/db.js";
+import { PLATFORMS } from "./lib/platforms/index.js";
+import { generateContent, generateIdeas, aiEnabled } from "./lib/ai.js";
+import { ingest, sendReply, processEntry, publishPost, pollAll, startScheduler } from "./lib/engine.js";
+
+const app = express();
+const PORT = Number(process.env.PORT) || 3000;
+const PUBLIC_URL = (process.env.PUBLIC_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+// Rahsia webhook Telegram diterbitkan dari token bot (stabil merentas restart)
+const TG_SECRET = crypto
+  .createHash("sha256")
+  .update(`tg:${process.env.TELEGRAM_BOT_TOKEN || ""}`)
+  .digest("hex")
+  .slice(0, 32);
+
+const safeEqual = (a, b) => {
+  const x = Buffer.from(String(a));
+  const y = Buffer.from(String(b));
+  return x.length === y.length && crypto.timingSafeEqual(x, y);
+};
+
+// ---------- Webhook (awam, tanpa login) ----------
+app.post("/webhook/telegram", express.json(), async (req, res) => {
+  if (!process.env.TELEGRAM_BOT_TOKEN || !safeEqual(req.get("X-Telegram-Bot-Api-Secret-Token") || "", TG_SECRET)) return res.sendStatus(401);
+  res.sendStatus(200);
+  try {
+    const item = PLATFORMS.telegram.parseUpdate(req.body);
+    if (item) await ingest(item);
+  } catch (e) {
+    log("error", `Webhook Telegram: ${e.message}`);
+  }
+});
+
+app.get("/webhook/meta", (req, res) => {
+  if (req.query["hub.mode"] === "subscribe" && process.env.META_VERIFY_TOKEN && req.query["hub.verify_token"] === process.env.META_VERIFY_TOKEN) {
+    return res.status(200).send(req.query["hub.challenge"]);
+  }
+  res.sendStatus(403);
+});
+
+app.post("/webhook/meta", express.raw({ type: "*/*" }), async (req, res) => {
+  const secret = process.env.META_APP_SECRET;
+  if (secret) {
+    const sig = req.get("X-Hub-Signature-256") || "";
+    const expected = "sha256=" + crypto.createHmac("sha256", secret).update(req.body).digest("hex");
+    if (!safeEqual(sig, expected)) return res.sendStatus(401);
+  }
+  res.sendStatus(200);
+  try {
+    const body = JSON.parse(req.body.toString("utf8"));
+    const items =
+      body.object === "whatsapp_business_account"
+        ? PLATFORMS.whatsapp.parseWebhook(body)
+        : body.object === "instagram"
+          ? PLATFORMS.instagram.parseWebhook(body)
+          : [];
+    for (const it of items) await ingest(it);
+  } catch (e) {
+    log("error", `Webhook Meta: ${e.message}`);
+  }
+});
+
+// Fail media yang dimuat naik mesti boleh diakses awam (IG/Threads/TikTok tarik dari URL)
+app.use("/uploads", express.static(path.resolve("public/uploads")));
+
+// ---------- Login (Basic Auth) untuk dashboard & API ----------
+app.use((req, res, next) => {
+  if (!ADMIN_PASSWORD) return next();
+  const [type, b64] = (req.get("Authorization") || "").split(" ");
+  const [, pass] = type === "Basic" ? Buffer.from(b64 || "", "base64").toString().split(/:(.*)/s) : [];
+  if (pass && safeEqual(pass, ADMIN_PASSWORD)) return next();
+  res.set("WWW-Authenticate", 'Basic realm="Autopilot Sosial"').sendStatus(401);
+});
+
+app.use(express.static(path.resolve("public")));
+app.use("/api", express.json({ limit: "1mb" }));
+
+const wrap = (fn) => (req, res) =>
+  Promise.resolve(fn(req, res)).catch((e) => {
+    log("error", `${req.method} ${req.path}: ${e.message}`);
+    res.status(400).json({ error: e.message });
+  });
+
+app.get("/api/status", (req, res) => {
+  const d = db();
+  res.json({
+    publicUrl: PUBLIC_URL,
+    ai: aiEnabled(),
+    authProtected: Boolean(ADMIN_PASSWORD),
+    platforms: Object.fromEntries(
+      Object.entries(PLATFORMS).map(([k, p]) => [
+        k,
+        { name: p.name, configured: p.configured(), canPost: p.canPost, canComment: p.canComment, canDM: p.canDM },
+      ])
+    ),
+    counts: {
+      scheduled: d.posts.filter((p) => p.status === "scheduled").length,
+      published: d.posts.filter((p) => p.status === "published").length,
+      pending: d.inbox.filter((e) => ["drafted", "needs_human", "new", "error"].includes(e.status)).length,
+      sentToday: d.inbox.filter((e) => e.status === "sent" && e.repliedAt?.slice(0, 10) === new Date().toISOString().slice(0, 10)).length,
+    },
+    log: d.log.slice(0, 50),
+  });
+});
+
+app.get("/api/settings", (req, res) => res.json(db().settings));
+app.put("/api/settings", wrap((req, res) => {
+  const s = db().settings;
+  const b = req.body;
+  for (const k of ["brandName", "brandVoice", "businessInfo"]) if (typeof b[k] === "string") s[k] = b[k];
+  if (b.pollMinutes) s.pollMinutes = Math.max(1, Number(b.pollMinutes));
+  if (b.replyMode) {
+    for (const [k, v] of Object.entries(b.replyMode)) {
+      if (k in s.replyMode && ["off", "approve", "auto"].includes(v)) s.replyMode[k] = v;
+    }
+  }
+  save();
+  res.json(s);
+}));
+
+// ---------- Kandungan ----------
+app.post("/api/generate", wrap(async (req, res) => {
+  const { brief, platforms, extra } = req.body;
+  if (!brief) throw new Error("Brief diperlukan");
+  const list = (platforms ?? []).filter((p) => PLATFORMS[p]);
+  if (!list.length) throw new Error("Pilih sekurang-kurangnya satu platform");
+  res.json(await generateContent({ brief, platforms: list, extra }));
+}));
+
+app.post("/api/ideas", wrap(async (req, res) => {
+  res.json({ ideas: await generateIdeas({ topic: req.body.topic, count: Math.min(30, Number(req.body.count) || 7) }) });
+}));
+
+app.post("/api/upload", express.raw({ type: ["image/*", "video/*"], limit: "200mb" }), wrap((req, res) => {
+  const ext = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "video/mp4": "mp4", "video/quicktime": "mov" }[req.get("Content-Type")];
+  if (!ext || !req.body?.length) throw new Error("Format tidak disokong (JPG, PNG, WEBP, MP4, MOV)");
+  const dir = path.resolve("public/uploads");
+  fs.mkdirSync(dir, { recursive: true });
+  const name = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}.${ext}`;
+  fs.writeFileSync(path.join(dir, name), req.body);
+  res.json({ url: `${PUBLIC_URL}/uploads/${name}`, mediaType: req.get("Content-Type").startsWith("video") ? "video" : "image" });
+}));
+
+app.get("/api/posts", (req, res) => res.json(db().posts));
+
+app.post("/api/posts", wrap(async (req, res) => {
+  const { title, brief, platforms, captions, mediaUrl, mediaType, scheduledAt, publishNow } = req.body;
+  const list = (platforms ?? []).filter((p) => PLATFORMS[p]?.canPost);
+  if (!list.length) throw new Error("Pilih platform yang menyokong post");
+  const post = {
+    id: newId(),
+    title: title || "",
+    brief: brief || "",
+    platforms: list,
+    captions: captions || {},
+    mediaUrl: mediaUrl || "",
+    mediaType: mediaType === "video" ? "video" : "image",
+    status: publishNow ? "publishing" : scheduledAt ? "scheduled" : "draft",
+    scheduledAt: scheduledAt || null,
+    results: {},
+    createdAt: new Date().toISOString(),
+  };
+  db().posts.unshift(post);
+  save();
+  if (publishNow) await publishPost(post);
+  res.json(post);
+}));
+
+app.put("/api/posts/:id", wrap((req, res) => {
+  const post = db().posts.find((p) => p.id === req.params.id);
+  if (!post) throw new Error("Post tidak dijumpai");
+  if (["publishing", "published"].includes(post.status)) throw new Error("Post sudah diterbitkan");
+  for (const k of ["title", "captions", "mediaUrl", "mediaType", "scheduledAt"]) if (k in req.body) post[k] = req.body[k];
+  if (req.body.platforms) post.platforms = req.body.platforms.filter((p) => PLATFORMS[p]?.canPost);
+  post.status = post.scheduledAt ? "scheduled" : "draft";
+  save();
+  res.json(post);
+}));
+
+app.post("/api/posts/:id/publish", wrap(async (req, res) => {
+  const post = db().posts.find((p) => p.id === req.params.id);
+  if (!post) throw new Error("Post tidak dijumpai");
+  res.json(await publishPost(post));
+}));
+
+app.delete("/api/posts/:id", (req, res) => {
+  db().posts = db().posts.filter((p) => p.id !== req.params.id);
+  save();
+  res.json({ ok: true });
+});
+
+// ---------- Inbox (komen & DM) ----------
+app.get("/api/inbox", (req, res) => {
+  const { status, platform } = req.query;
+  let list = db().inbox;
+  if (platform) list = list.filter((e) => e.platform === platform);
+  if (status === "pending") list = list.filter((e) => ["new", "drafted", "needs_human", "error"].includes(e.status));
+  else if (status) list = list.filter((e) => e.status === status);
+  res.json(list.slice(0, 300));
+});
+
+const findEntry = (id) => {
+  const e = db().inbox.find((x) => x.id === id);
+  if (!e) throw new Error("Mesej tidak dijumpai");
+  return e;
+};
+
+app.post("/api/inbox/:id/send", wrap(async (req, res) => {
+  const e = findEntry(req.params.id);
+  const text = (req.body.text ?? e.draft ?? "").trim();
+  if (!text) throw new Error("Teks balasan kosong");
+  try {
+    await sendReply(e, text);
+  } catch (err) {
+    e.status = "error";
+    e.error = err.message;
+    save();
+    throw err;
+  }
+  res.json(e);
+}));
+
+app.post("/api/inbox/:id/redraft", wrap(async (req, res) => {
+  const e = findEntry(req.params.id);
+  const mode = db().settings.replyMode[e.platform];
+  if (mode === "off") db().settings.replyMode[e.platform] = "approve";
+  await processEntry(e);
+  if (mode === "off") db().settings.replyMode[e.platform] = "off";
+  res.json(e);
+}));
+
+app.post("/api/inbox/:id/ignore", wrap((req, res) => {
+  const e = findEntry(req.params.id);
+  e.status = "ignored";
+  save();
+  res.json(e);
+}));
+
+// Uji tanpa platform sebenar: simulasi mesej masuk
+app.post("/api/inbox/simulate", wrap(async (req, res) => {
+  const { platform = "telegram", kind = "dm", text, from = "Pelanggan Ujian" } = req.body;
+  if (!text) throw new Error("Teks diperlukan");
+  await ingest({ platform, kind, externalId: `sim-${newId()}`, threadRef: { simulated: true }, from, text, simulated: true });
+  res.json(db().inbox[0]);
+}));
+
+app.post("/api/poll", wrap(async (req, res) => {
+  await pollAll();
+  res.json({ ok: true });
+}));
+
+app.post("/api/telegram/set-webhook", wrap(async (req, res) => {
+  if (!process.env.TELEGRAM_BOT_TOKEN) throw new Error("TELEGRAM_BOT_TOKEN belum diset");
+  if (!PUBLIC_URL.startsWith("https://")) throw new Error("PUBLIC_URL mesti HTTPS untuk webhook Telegram");
+  res.json(await PLATFORMS.telegram.setWebhook(PUBLIC_URL, TG_SECRET));
+}));
+
+app.listen(PORT, () => {
+  console.log(`Autopilot Sosial berjalan di http://localhost:${PORT}`);
+  if (!ADMIN_PASSWORD) console.warn("AMARAN: ADMIN_PASSWORD tidak diset — dashboard terbuka tanpa login!");
+  startScheduler();
+});

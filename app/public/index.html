@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Autopilot Sosial</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#1c1f24;--muted:#69707d;--line:#e3e6eb;--accent:#0f766e;--accent-2:#ccfbf1;--warn:#b45309;--warn-bg:#fef3c7;--err:#b91c1c;--err-bg:#fee2e2;--ok:#15803d;--ok-bg:#dcfce7}
+@media (prefers-color-scheme:dark){:root{--bg:#111418;--card:#1a1e24;--text:#e8eaed;--muted:#9aa1ac;--line:#2b313a;--accent:#2dd4bf;--accent-2:#134e4a;--warn:#fbbf24;--warn-bg:#422006;--err:#f87171;--err-bg:#450a0a;--ok:#4ade80;--ok-bg:#052e16}}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text)}
+header{display:flex;align-items:center;gap:16px;padding:12px 20px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+header h1{font-size:18px;margin:0}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:none;border:0;padding:8px 12px;border-radius:8px;color:var(--muted);cursor:pointer;font:inherit}
+nav button.on{background:var(--accent-2);color:var(--text);font-weight:600}
+main{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.card h2{font-size:16px;margin:0 0 12px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.stat b{display:block;font-size:26px}
+.stat span{color:var(--muted);font-size:13px}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+input[type=text],input[type=url],input[type=datetime-local],input[type=number],textarea,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font:inherit}
+textarea{min-height:90px;resize:vertical}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;font:inherit}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+@media (prefers-color-scheme:dark){.btn.pri{color:#04201d}}
+.btn:disabled{opacity:.5;cursor:wait}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chips label{display:inline-flex;gap:6px;align-items:center;margin:0 12px 0 0;color:var(--text);font-size:14px}
+.pill{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:var(--line);color:var(--text)}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.err{background:var(--err-bg);color:var(--err)}
+.muted{color:var(--muted);font-size:13px}
+.item{border-top:1px solid var(--line);padding:12px 0}
+.item:first-child{border-top:0}
+.msg{white-space:pre-wrap;margin:6px 0}
+.caps textarea{min-height:140px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:8px 6px;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+.log{font-family:ui-monospace,Menlo,monospace;font-size:12px;max-height:260px;overflow:auto}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:8px;display:none;max-width:90vw}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚡ Autopilot Sosial</h1>
+  <nav id="nav">
+    <button data-tab="dash" class="on">Papan Pemuka</button>
+    <button data-tab="create">Cipta Kandungan</button>
+    <button data-tab="posts">Jadual Post</button>
+    <button data-tab="inbox">Inbox Komen &amp; DM</button>
+    <button data-tab="settings">Tetapan</button>
+  </nav>
+</header>
+<main>
+
+<section id="dash" class="on">
+  <div class="grid" id="stats"></div>
+  <div class="card" style="margin-top:16px"><h2>Sambungan Platform</h2><table id="conn"></table>
+    <p class="muted">Isi kunci API dalam fail <code>.env</code> server, kemudian restart. Lihat README untuk langkah setiap platform.</p></div>
+  <div class="card"><h2>Log Aktiviti</h2><div class="log" id="log"></div></div>
+</section>
+
+<section id="create">
+  <div class="card">
+    <h2>1. Brief kandungan</h2>
+    <label>Apa yang anda mahu post?</label>
+    <textarea id="brief" placeholder="cth: Promosi ebook Autopilot Bisnes RM39, tekankan jimat masa buat 90 video sebulan"></textarea>
+    <label>Arahan tambahan (pilihan)</label>
+    <input type="text" id="extra" placeholder="cth: nada kelakar, sasarkan peniaga online, tamat dengan soalan">
+    <label>Platform</label>
+    <div class="chips" id="genPlatforms"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn pri" id="btnGen">✨ Jana dengan AI</button>
+      <button class="btn" id="btnIdeas">💡 Beri saya 7 idea</button>
+    </div>
+    <div id="ideas"></div>
+  </div>
+  <div class="card" id="draftCard" style="display:none">
+    <h2>2. Semak &amp; sunting</h2>
+    <p class="muted" id="visual"></p>
+    <div class="caps" id="caps"></div>
+    <label>Media (gambar/video) — perlu untuk Instagram &amp; TikTok</label>
+    <div class="row">
+      <input type="url" id="mediaUrl" placeholder="https://... (URL awam)" style="flex:1;min-width:200px">
+      <select id="mediaType" style="width:auto"><option value="image">Gambar</option><option value="video">Video</option></select>
+      <input type="file" id="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime">
+    </div>
+    <label>Jadualkan pada (kosongkan untuk simpan sebagai draf)</label>
+    <input type="datetime-local" id="when" style="max-width:260px">
+    <div class="row" style="margin-top:12px">
+      <button class="btn pri" id="btnNow">🚀 Post sekarang</button>
+      <button class="btn" id="btnSched">🗓️ Jadual / Simpan draf</button>
+    </div>
+  </div>
+</section>
+
+<section id="posts">
+  <div class="card"><h2>Semua Post</h2><div id="postList"></div></div>
+</section>
+
+<section id="inbox">
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div class="row">
+        <select id="fStatus" style="width:auto"><option value="pending">Perlu tindakan</option><option value="">Semua</option><option value="sent">Sudah dibalas</option><option value="ignored">Diabaikan</option></select>
+        <select id="fPlatform" style="width:auto"><option value="">Semua platform</option></select>
+      </div>
+      <div class="row"><button class="btn" id="btnPoll">🔄 Semak komen baharu</button></div>
+    </div>
+  </div>
+  <div class="card"><div id="inboxList"></div></div>
+  <div class="card">
+    <h2>Uji balasan AI (simulasi)</h2>
+    <p class="muted">Hantar mesej palsu untuk lihat bagaimana AI membalas — tiada apa dihantar ke platform sebenar.</p>
+    <div class="row">
+      <select id="simPlatform" style="width:auto"></select>
+      <select id="simKind" style="width:auto"><option value="dm">DM</option><option value="comment">Komen</option></select>
+    </div>
+    <label>Mesej pelanggan</label>
+    <input type="text" id="simText" placeholder="cth: Berapa harga pakej senior? Boleh bayar ansuran?">
+    <div class="row" style="margin-top:10px"><button class="btn" id="btnSim">Hantar simulasi</button></div>
+  </div>
+</section>
+
+<section id="settings">
+  <div class="card">
+    <h2>Jenama &amp; Maklumat Bisnes</h2>
+    <p class="muted">AI hanya akan guna fakta di sini semasa membalas — lebih lengkap, lebih tepat balasannya.</p>
+    <label>Nama bisnes</label><input type="text" id="sBrand">
+    <label>Gaya bahasa / brand voice</label><textarea id="sVoice"></textarea>
+    <label>Maklumat bisnes: produk, harga, cara order, link, waktu operasi, FAQ</label><textarea id="sInfo" style="min-height:200px"></textarea>
+  </div>
+  <div class="card">
+    <h2>Mod Auto-Balas</h2>
+    <p class="muted"><b>Luluskan</b> = AI draf, anda tekan hantar. <b>Auto</b> = AI terus hantar (kecuali soalan yang AI tanda perlu manusia). Disyorkan mula dengan "Luluskan".</p>
+    <table id="modes"></table>
+    <label>Semak komen Threads/Instagram setiap (minit)</label><input type="number" id="sPoll" min="1" style="max-width:120px">
+  </div>
+  <div class="row"><button class="btn pri" id="btnSave">Simpan tetapan</button><button class="btn" id="btnTgHook">Sambung webhook Telegram</button></div>
+</section>
+</main>
+<div id="toast"></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const ICON = { tiktok: "🎵", instagram: "📸", threads: "🧵", telegram: "✈️", whatsapp: "💬" };
+let STATUS = null;
+
+function toast(msg, ms = 3500) { const t = $("#toast"); t.textContent = msg; t.style.display = "block"; clearTimeout(t._h); t._h = setTimeout(() => (t.style.display = "none"), ms); }
+async function call(url, opts = {}) {
+  const res = await fetch(url, { headers: opts.body && !(opts.body instanceof Blob) ? { "Content-Type": "application/json" } : opts.headers, ...opts, body: opts.body && !(opts.body instanceof Blob) ? JSON.stringify(opts.body) : opts.body });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+async function busy(btn, fn) { btn.disabled = true; try { await fn(); } catch (e) { toast("❌ " + e.message, 6000); } finally { btn.disabled = false; } }
+
+// Navigasi
+$("#nav").onclick = (e) => {
+  const t = e.target.dataset.tab; if (!t) return;
+  document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("on", b.dataset.tab === t));
+  document.querySelectorAll("section").forEach((s) => s.classList.toggle("on", s.id === t));
+  ({ dash: loadStatus, posts: loadPosts, inbox: loadInbox, settings: loadSettings })[t]?.();
+};
+
+async function loadStatus() {
+  STATUS = await call("/api/status");
+  const c = STATUS.counts;
+  $("#stats").innerHTML = [["Perlu tindakan (inbox)", c.pending], ["Balasan hari ini", c.sentToday], ["Post terjadual", c.scheduled], ["Post diterbitkan", c.published]]
+    .map(([l, v]) => `<div class="card stat"><b>${v}</b><span>${l}</span></div>`).join("");
+  const yes = (b) => (b ? "✅" : "—");
+  $("#conn").innerHTML = `<tr><th>Platform</th><th>Status</th><th>Post</th><th>Komen</th><th>DM</th></tr>` +
+    Object.entries(STATUS.platforms).map(([k, p]) => `<tr><td>${ICON[k]} ${p.name}</td><td>${p.configured ? '<span class="pill ok">Disambung</span>' : '<span class="pill warn">Belum</span>'}</td><td>${yes(p.canPost)}</td><td>${yes(p.canComment)}</td><td>${yes(p.canDM)}</td></tr>`).join("") +
+    `<tr><td>🤖 Claude AI</td><td>${STATUS.ai ? '<span class="pill ok">Aktif</span>' : '<span class="pill err">ANTHROPIC_API_KEY tiada</span>'}</td><td colspan="3" class="muted">Cipta kandungan &amp; draf balasan</td></tr>`;
+  $("#log").innerHTML = STATUS.log.map((l) => `<div><span class="muted">${new Date(l.at).toLocaleString("ms-MY")}</span> ${l.level === "error" ? "❌" : "•"} ${esc(l.msg)}</div>`).join("") || '<span class="muted">Tiada aktiviti lagi.</span>';
+  // isi pilihan platform
+  const postable = Object.entries(STATUS.platforms).filter(([, p]) => p.canPost);
+  if (!$("#genPlatforms").children.length) {
+    $("#genPlatforms").innerHTML = postable.map(([k, p]) => `<label><input type="checkbox" value="${k}" ${p.configured || k !== "tiktok" ? "checked" : ""}> ${ICON[k]} ${p.name}</label>`).join("");
+    const opts = Object.entries(STATUS.platforms).map(([k, p]) => `<option value="${k}">${ICON[k]} ${p.name}</option>`).join("");
+    $("#fPlatform").innerHTML += opts; $("#simPlatform").innerHTML = opts;
+  }
+}
+
+// ---------- Cipta kandungan ----------
+const chosen = () => [...document.querySelectorAll("#genPlatforms input:checked")].map((i) => i.value);
+$("#btnGen").onclick = (e) => busy(e.target, async () => {
+  const r = await call("/api/generate", { method: "POST", body: { brief: $("#brief").value, extra: $("#extra").value, platforms: chosen() } });
+  $("#visual").innerHTML = `<b>Idea:</b> ${esc(r.idea)}<br><b>Cadangan visual:</b> ${esc(r.visualIdea)}`;
+  $("#caps").innerHTML = Object.entries(r.captions).map(([k, v]) => `<label>${ICON[k]} ${STATUS.platforms[k].name}</label><textarea data-p="${k}">${esc(v)}</textarea>`).join("");
+  $("#draftCard").style.display = "block"; $("#draftCard").scrollIntoView({ behavior: "smooth" });
+});
+$("#btnIdeas").onclick = (e) => busy(e.target, async () => {
+  const r = await call("/api/ideas", { method: "POST", body: { topic: $("#brief").value } });
+  $("#ideas").innerHTML = `<div style="margin-top:12px">` + r.ideas.map((i) => `<div class="item"><b>${esc(i.title)}</b><div class="muted">${esc(i.brief)}</div><button class="btn" data-brief="${esc(i.title + ": " + i.brief)}">Guna idea ini</button></div>`).join("") + "</div>";
+});
+$("#ideas").onclick = (e) => { if (e.target.dataset.brief) { $("#brief").value = e.target.dataset.brief; $("#btnGen").click(); } };
+$("#file").onchange = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  toast("Memuat naik…");
+  try { const r = await call("/api/upload", { method: "POST", body: f, headers: { "Content-Type": f.type } }); $("#mediaUrl").value = r.url; $("#mediaType").value = r.mediaType; toast("✅ Dimuat naik"); }
+  catch (err) { toast("❌ " + err.message); }
+};
+function collectPost() {
+  const captions = {}; document.querySelectorAll("#caps textarea").forEach((t) => (captions[t.dataset.p] = t.value));
+  return { brief: $("#brief").value, title: $("#brief").value.slice(0, 60), platforms: Object.keys(captions), captions, mediaUrl: $("#mediaUrl").value, mediaType: $("#mediaType").value };
+}
+$("#btnNow").onclick = (e) => busy(e.target, async () => {
+  if (!confirm("Terbitkan sekarang ke semua platform terpilih?")) return;
+  toast("Sedang menerbitkan… (boleh ambil masa untuk video)", 60000);
+  const p = await call("/api/posts", { method: "POST", body: { ...collectPost(), publishNow: true } });
+  toast(p.status === "published" ? "✅ Berjaya diterbitkan" : "⚠️ Sebahagian gagal — lihat Jadual Post", 6000);
+});
+$("#btnSched").onclick = (e) => busy(e.target, async () => {
+  const w = $("#when").value;
+  await call("/api/posts", { method: "POST", body: { ...collectPost(), scheduledAt: w ? new Date(w).toISOString() : null } });
+  toast(w ? "🗓️ Dijadualkan" : "💾 Disimpan sebagai draf");
+});
+
+// ---------- Post ----------
+const pstat = { draft: "", scheduled: "warn", publishing: "warn", published: "ok", partial: "warn", failed: "err" };
+async function loadPosts() {
+  const posts = await call("/api/posts");
+  $("#postList").innerHTML = posts.map((p) => `<div class="item">
+    <div class="row" style="justify-content:space-between"><b>${esc(p.title || p.brief.slice(0, 60) || "(tiada tajuk)")}</b><span class="pill ${pstat[p.status]}">${p.status}</span></div>
+    <div class="muted">${p.platforms.map((k) => ICON[k] + " " + k + (p.results?.[k] ? (p.results[k].ok ? " ✅" : " ❌ " + esc(p.results[k].error)) : "")).join(" · ")}</div>
+    ${p.scheduledAt ? `<div class="muted">Jadual: ${new Date(p.scheduledAt).toLocaleString("ms-MY")}</div>` : ""}
+    <details><summary class="muted">Lihat kapsyen</summary>${Object.entries(p.captions).map(([k, v]) => `<p><b>${ICON[k]}</b> <span class="msg">${esc(v)}</span></p>`).join("")}${p.mediaUrl ? `<p class="muted">Media: ${esc(p.mediaUrl)}</p>` : ""}</details>
+    <div class="row" style="margin-top:6px">${p.status !== "published" ? `<button class="btn" data-pub="${p.id}">🚀 Terbit sekarang</button>` : ""}<button class="btn" data-del="${p.id}">🗑️ Padam</button></div>
+  </div>`).join("") || '<span class="muted">Belum ada post.</span>';
+}
+$("#postList").onclick = (e) => {
+  const { pub, del } = e.target.dataset;
+  if (pub) busy(e.target, async () => { await call(`/api/posts/${pub}/publish`, { method: "POST" }); loadPosts(); });
+  if (del && confirm("Padam post ini dari senarai?")) busy(e.target, async () => { await call(`/api/posts/${del}`, { method: "DELETE" }); loadPosts(); });
+};
+
+// ---------- Inbox ----------
+const istat = { new: ["Baharu", ""], drafted: ["Draf AI sedia", "ok"], needs_human: ["Perlu anda", "warn"], sent: ["Dibalas", "ok"], ignored: ["Diabaikan", ""], error: ["Ralat", "err"] };
+async function loadInbox() {
+  const q = new URLSearchParams({ status: $("#fStatus").value, platform: $("#fPlatform").value });
+  const list = await call("/api/inbox?" + q);
+  $("#inboxList").innerHTML = list.map((m) => `<div class="item" data-id="${m.id}">
+    <div class="row" style="justify-content:space-between"><span>${ICON[m.platform]} <b>${esc(m.from || "Tanpa nama")}</b> <span class="muted">· ${m.kind === "dm" ? "DM" : "Komen"} · ${new Date(m.receivedAt).toLocaleString("ms-MY")}${m.simulated ? " · simulasi" : ""}</span></span><span class="pill ${istat[m.status][1]}">${istat[m.status][0]}</span></div>
+    <div class="msg">${esc(m.text)}</div>
+    ${m.context ? `<div class="muted">Pada post: ${esc(m.context)}</div>` : ""}
+    ${m.status === "sent" ? `<div class="muted">↪ ${esc(m.reply)}</div>` : `
+      ${m.aiNote ? `<div class="muted">🤖 ${esc(m.aiNote)}</div>` : ""}${m.error ? `<div class="pill err">${esc(m.error)}</div>` : ""}
+      <textarea class="reply" placeholder="Tulis balasan…">${esc(m.draft)}</textarea>
+      <div class="row" style="margin-top:6px"><button class="btn pri" data-act="send">Hantar</button><button class="btn" data-act="redraft">✨ Draf AI</button><button class="btn" data-act="ignore">Abaikan</button></div>`}
+  </div>`).join("") || '<span class="muted">Tiada mesej. 🎉</span>';
+}
+$("#inboxList").onclick = (e) => {
+  const act = e.target.dataset.act; if (!act) return;
+  const box = e.target.closest(".item"); const id = box.dataset.id;
+  busy(e.target, async () => {
+    if (act === "send") await call(`/api/inbox/${id}/send`, { method: "POST", body: { text: box.querySelector(".reply").value } });
+    else await call(`/api/inbox/${id}/${act}`, { method: "POST" });
+    loadInbox();
+  });
+};
+$("#fStatus").onchange = loadInbox; $("#fPlatform").onchange = loadInbox;
+$("#btnPoll").onclick = (e) => busy(e.target, async () => { await call("/api/poll", { method: "POST" }); loadInbox(); toast("Selesai semak"); });
+$("#btnSim").onclick = (e) => busy(e.target, async () => {
+  await call("/api/inbox/simulate", { method: "POST", body: { platform: $("#simPlatform").value, kind: $("#simKind").value, text: $("#simText").value } });
+  $("#fStatus").value = ""; loadInbox();
+});
+
+// ---------- Tetapan ----------
+async function loadSettings() {
+  const s = await call("/api/settings");
+  $("#sBrand").value = s.brandName; $("#sVoice").value = s.brandVoice; $("#sInfo").value = s.businessInfo; $("#sPoll").value = s.pollMinutes;
+  $("#modes").innerHTML = Object.entries(s.replyMode).map(([k, v]) => {
+    const p = STATUS?.platforms[k]; const can = p ? p.canComment || p.canDM : true;
+    return `<tr><td>${ICON[k]} ${p?.name || k}</td><td>${can ? `<select data-mode="${k}">${["off", "approve", "auto"].map((o) => `<option value="${o}" ${o === v ? "selected" : ""}>${{ off: "Mati", approve: "Luluskan dahulu", auto: "Auto hantar" }[o]}</option>`).join("")}</select>` : '<span class="muted">Tidak disokong oleh API platform</span>'}</td></tr>`;
+  }).join("");
+}
+$("#btnSave").onclick = (e) => busy(e.target, async () => {
+  const replyMode = {}; document.querySelectorAll("[data-mode]").forEach((s) => (replyMode[s.dataset.mode] = s.value));
+  await call("/api/settings", { method: "PUT", body: { brandName: $("#sBrand").value, brandVoice: $("#sVoice").value, businessInfo: $("#sInfo").value, pollMinutes: $("#sPoll").value, replyMode } });
+  toast("✅ Disimpan");
+});
+$("#btnTgHook").onclick = (e) => busy(e.target, async () => { await call("/api/telegram/set-webhook", { method: "POST" }); toast("✅ Webhook Telegram disambung"); });
+
+loadStatus().catch((e) => toast("❌ " + e.message));
+setInterval(() => { if ($("#dash").classList.contains("on")) loadStatus(); if ($("#inbox").classList.contains("on") && !document.activeElement?.classList.contains("reply")) loadInbox(); }, 20000);
+</script>
+</body>
+</html>
