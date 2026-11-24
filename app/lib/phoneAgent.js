@@ -6,7 +6,7 @@
 import crypto from "node:crypto";
 import Anthropic from "@anthropic-ai/sdk";
 import * as adb from "./adb.js";
-import { db, save, log, newId } from "./db.js";
+import { db, save, log, newId, upsert } from "./db.js";
 
 const MODEL = process.env.CLAUDE_MODEL || "claude-opus-5-5";
 const MAX_STEPS = Number(process.env.PHONE_AGENT_MAX_STEPS) || 40;
@@ -102,7 +102,7 @@ async function runAgent({ mode, goal, replyText, onReport, label }) {
   let typedReply = false;
   const step = (s) => {
     run.steps.push({ at: new Date().toISOString(), ...s });
-    save();
+    upsert("adbRuns", run);
   };
 
   try {
@@ -245,7 +245,7 @@ async function runAgent({ mode, goal, replyText, onReport, label }) {
   } finally {
     run.endedAt = new Date().toISOString();
     current = null;
-    save();
+    upsert("adbRuns", run);
     log(run.status === "success" ? "info" : "error", `Ejen telefon [${label}]: ${run.status} — ${run.summary || ""}`);
     await adb.key("home").catch(() => {});
   }

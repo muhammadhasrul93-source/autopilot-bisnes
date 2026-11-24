@@ -8,10 +8,10 @@ import path from "node:path";
 import QRCode from "qrcode";
 import pino from "pino";
 import makeWASocket, { Browsers, DisconnectReason, fetchLatestBaileysVersion, useMultiFileAuthState } from "baileys";
-import { log } from "../db.js";
+import { log, DATA_DIR } from "../db.js";
 import { sleep } from "./http.js";
 
-const AUTH_DIR = path.resolve("data/whatsapp-auth");
+const AUTH_DIR = path.join(DATA_DIR, "whatsapp-auth");
 const logger = pino({ level: "silent" });
 
 let sock = null;

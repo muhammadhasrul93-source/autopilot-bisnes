@@ -2,7 +2,7 @@ import express from "express";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { db, save, newId, log } from "./lib/db.js";
+import { db, save, newId, log, APP_DIR } from "./lib/db.js";
 import { PLATFORMS } from "./lib/platforms/index.js";
 import { generateContent, generateIdeas, aiEnabled } from "./lib/ai.js";
 import { ingest, sendReply, processEntry, publishPost, pollAll, startScheduler, scanPhone } from "./lib/engine.js";
@@ -61,7 +61,7 @@ app.post("/webhook/meta", express.raw({ type: "*/*" }), async (req, res) => {
 });
 
 // Fail media yang dimuat naik mesti boleh diakses awam (IG/Threads/TikTok tarik dari URL)
-app.use("/uploads", express.static(path.resolve("public/uploads")));
+app.use("/uploads", express.static(path.join(APP_DIR, "public/uploads")));
 
 // ---------- OAuth callback (dilindungi oleh parameter state, bukan Basic Auth) ----------
 const resultPage = (ok, msg) => `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -91,7 +91,7 @@ app.use((req, res, next) => {
   res.set("WWW-Authenticate", 'Basic realm="Autopilot Sosial"').sendStatus(401);
 });
 
-app.use(express.static(path.resolve("public")));
+app.use(express.static(path.join(APP_DIR, "public")));
 app.use("/api", express.json({ limit: "1mb" }));
 
 const wrap = (fn) => (req, res) =>
@@ -169,7 +169,7 @@ app.post("/api/ideas", wrap(async (req, res) => {
 app.post("/api/upload", express.raw({ type: ["image/*", "video/*"], limit: "200mb" }), wrap((req, res) => {
   const ext = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "video/mp4": "mp4", "video/quicktime": "mov" }[req.get("Content-Type")];
   if (!ext || !req.body?.length) throw new Error("Format tidak disokong (JPG, PNG, WEBP, MP4, MOV)");
-  const dir = path.resolve("public/uploads");
+  const dir = path.join(APP_DIR, "public/uploads");
   fs.mkdirSync(dir, { recursive: true });
   const name = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}.${ext}`;
   fs.writeFileSync(path.join(dir, name), req.body);

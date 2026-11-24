@@ -1,5 +1,5 @@
 // Enjin: terima mesej masuk, draf/hantar balasan AI, publish post terjadual, polling.
-import { db, save, newId, log, markSeen } from "./db.js";
+import { db, save, newId, log, markSeen, upsert } from "./db.js";
 import { PLATFORMS } from "./platforms/index.js";
 import { draftReply, aiEnabled } from "./ai.js";
 import { refreshTokens } from "./accounts.js";
@@ -58,7 +58,7 @@ export async function processEntry(entry) {
     entry.error = e.message;
     log("error", `AI/balasan ${entry.platform}: ${e.message}`);
   }
-  save();
+  upsert("inbox", entry);
 }
 
 export async function sendReply(entry, text) {
@@ -67,7 +67,7 @@ export async function sendReply(entry, text) {
     // tiada apa dihantar
   } else if (entry.threadRef?.via === "adb") {
     entry.status = "sending";
-    save();
+    upsert("inbox", entry);
     await phone.reply(entry.threadRef, text);
   } else {
     await p.reply(entry.threadRef, text);
@@ -76,7 +76,7 @@ export async function sendReply(entry, text) {
   entry.status = "sent";
   entry.repliedAt = new Date().toISOString();
   entry.error = undefined;
-  save();
+  upsert("inbox", entry);
   log("info", `Balasan dihantar ke ${p.name}${entry.threadRef?.via === "adb" ? " (telefon)" : ""} (${entry.from || entry.externalId})`);
 }
 
@@ -98,12 +98,12 @@ export async function publishPost(post) {
       post.results[key] = { ok: false, error: e.message, at: new Date().toISOString() };
       log("error", `Post ke ${p.name} gagal: ${e.message}`);
     }
-    save();
+    upsert("posts", post);
   }
   const all = post.platforms.map((k) => post.results[k]?.ok);
   post.status = all.every(Boolean) ? "published" : all.some(Boolean) ? "partial" : "failed";
   post.publishedAt = new Date().toISOString();
-  save();
+  upsert("posts", post);
   return post;
 }
 

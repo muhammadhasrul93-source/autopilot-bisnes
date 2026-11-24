@@ -107,8 +107,21 @@ export const key = (k) => run(["shell", "input", "keyevent", KEYS[k] || k]);
  * Taip teks. Dengan ADBKeyBoard (disyorkan) semua aksara termasuk emoji & baris baru disokong.
  * Tanpanya hanya ASCII disokong oleh `input text`.
  */
+let imeCache = { at: 0, adb: false };
+async function adbKeyboardActive() {
+  if (db().settings.adb?.useAdbKeyboard) return true;
+  if (Date.now() - imeCache.at < 60000) return imeCache.adb;
+  let active = false;
+  try {
+    active = /adbkeyboard/i.test(await run(["shell", "settings", "get", "secure", "default_input_method"]));
+  } catch {}
+  imeCache = { at: Date.now(), adb: active };
+  return active;
+}
+export const usingAdbKeyboard = adbKeyboardActive;
+
 export async function typeText(text) {
-  if (db().settings.adb?.useAdbKeyboard) {
+  if (await adbKeyboardActive()) {
     const b64 = Buffer.from(text, "utf8").toString("base64");
     await run(["shell", "am", "broadcast", "-a", "ADB_INPUT_B64", "--es", "msg", b64]);
     return;
@@ -144,4 +157,28 @@ export async function wakeAndUnlockHint() {
     await swipe(540, 1800, 540, 600, 300);
     await sleep(800);
   }
+}
+
+/**
+ * Screenshot yang dikecilkan (JPEG) untuk dihantar kepada Claude melalui MCP.
+ * Pulangkan { data, scale } — koordinat imej × scale = koordinat skrin sebenar.
+ */
+export async function screenshotScaled(maxWidth = 720) {
+  const png = await screenshot();
+  const { default: sharp } = await import("sharp");
+  const img = sharp(png);
+  const meta = await img.metadata();
+  const width = Math.min(maxWidth, meta.width || maxWidth);
+  const scale = (meta.width || width) / width;
+  const data = await img.resize({ width }).jpeg({ quality: 70 }).toBuffer();
+  return { data, scale, width, height: Math.round((meta.height || 0) / scale) };
+}
+
+/** Hantar fail media ke galeri telefon supaya boleh dipilih dalam app (TikTok, IG, dll). */
+export async function pushMedia(localPath, name) {
+  const remote = `/sdcard/DCIM/Autopilot/${name}`;
+  await run(["shell", "mkdir", "-p", "/sdcard/DCIM/Autopilot"]);
+  await run(["push", localPath, remote], { timeout: 300000 });
+  await run(["shell", "am", "broadcast", "-a", "android.intent.action.MEDIA_SCANNER_SCAN_FILE", "-d", `file://${remote}`]).catch(() => {});
+  return remote;
 }

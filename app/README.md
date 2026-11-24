@@ -11,6 +11,25 @@ Dashboard web untuk urus **TikTok, Instagram, Threads, Telegram dan WhatsApp** d
   - **Auto hantar**: AI terus balas. Soalan yang AI tak pasti (harga tiada dalam info, aduan, refund) tetap ditahan untuk anda.
 - 🧪 **Simulasi**: uji gaya balasan AI tanpa hantar apa-apa ke platform sebenar.
 
+## Dua cara guna
+
+| | **A. Kit Claude (disyorkan untuk pelanggan)** | **B. App web sendiri** |
+|---|---|---|
+| Otak AI | Claude Code / Claude Desktop pelanggan, log masuk akaun Claude **mereka sendiri** | Claude API (`ANTHROPIC_API_KEY`, bayar ikut guna) |
+| Kos AI | Dalam had langganan Pro/Max mereka | Dicaj ke API key |
+| Cara guna | Bercakap dengan Claude, `/mcp__autopilot__semak_dan_balas`, `/loop 30m …` | Dashboard web + penjadual |
+| Panduan | **[kit/PASANG.md](kit/PASANG.md)** | Bahagian di bawah |
+
+Kedua-dua cara berkongsi data yang sama (inbox, maklumat bisnes, akaun API), jadi boleh digunakan bersama.
+
+Kit Claude ialah pelayan MCP (`mcp.js`) dengan 20 alat dan 3 prompt:
+- `telefon_*`: kawal Android melalui ADB: skrin, tekan, leret, taip, buka app, hantar media ke galeri;
+- `inbox_*`: rekod, senarai dan kemas kini status komen/DM;
+- `bisnes_*`: maklumat bisnes & mod balasan;
+- `sosial_*`: post & balas melalui API untuk akaun yang disambung di dashboard.
+
+Ia tidak memanggil API Anthropic sendiri. Anthropic tidak membenarkan app pihak ketiga menawarkan log masuk Claude.ai, jadi pelanggan menggunakan app Claude rasmi mereka, dan kit ini hanya membekalkan alat dan arahan.
+
 ## Cara jalankan
 
 Perlu Node.js 22 ke atas.
@@ -120,6 +139,8 @@ Isi **Tetapan → Maklumat bisnes** selengkap mungkin: senarai produk & harga, c
 ## Struktur
 ```
 app/
+  mcp.js                 # pelayan MCP untuk Claude Code / Claude Desktop (kit Claude)
+  kit/                   # PASANG.md, CLAUDE.md ruang kerja, skrip pemasang (npm run pasang)
   server.js              # Express: dashboard, API, webhook
   lib/ai.js              # Claude: jana kandungan, idea, draf balasan
   lib/engine.js          # inbox, auto-balas, penjadual post, polling
