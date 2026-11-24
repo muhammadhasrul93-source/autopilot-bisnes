@@ -53,6 +53,7 @@ ol{padding-left:20px;margin:8px 0}
   <nav id="nav">
     <button data-tab="dash" class="on">Papan Pemuka</button>
     <button data-tab="accounts">Akaun</button>
+    <button data-tab="phone">Telefon (ADB)</button>
     <button data-tab="create">Cipta Kandungan</button>
     <button data-tab="posts">Jadual Post</button>
     <button data-tab="inbox">Inbox Komen &amp; DM</button>
@@ -70,6 +71,47 @@ ol{padding-left:20px;margin:8px 0}
 
 <section id="accounts">
   <div class="grid" id="acctCards" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))"></div>
+</section>
+
+<section id="phone">
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));align-items:start">
+    <div>
+      <div class="card">
+        <h2>📱 Peranti</h2>
+        <div id="devList" class="muted">Memuat…</div>
+        <div class="row" style="margin-top:8px"><button class="btn" id="devRefresh">🔄 Muat semula</button></div>
+        <details style="margin-top:12px"><summary>Sambung tanpa wayar (Wireless debugging)</summary>
+          <ol class="muted"><li>Telefon: Tetapan → Pilihan pembangun → <b>Wireless debugging</b> → ON</li>
+          <li>Tekan <b>Pair device with pairing code</b>. Masukkan IP:port dan kod di bawah</li>
+          <li>Kemudian sambung guna IP:port yang tertera di skrin Wireless debugging</li></ol>
+          <label>Pair: IP:port dan kod 6 digit</label>
+          <div class="row"><input type="text" id="pairHost" placeholder="192.168.1.20:37099" style="flex:2"><input type="text" id="pairCode" placeholder="123456" style="flex:1"><button class="btn" id="btnPair">Pair</button></div>
+          <label>Sambung: IP:port</label>
+          <div class="row"><input type="text" id="connHost" placeholder="192.168.1.20:41235" style="flex:1"><button class="btn" id="btnConn">Sambung</button></div>
+        </details>
+      </div>
+      <div class="card">
+        <h2>🔎 Imbas komen &amp; DM melalui telefon</h2>
+        <p class="muted">Claude akan buka setiap app, baca komen &amp; DM baharu dan masukkan ke Inbox. Balasan ikut mod di Tetapan (luluskan / auto).</p>
+        <div class="chips" id="adbApps"></div>
+        <label>Imbas automatik setiap (minit, 0 = mati)</label><input type="number" id="adbEvery" min="0" style="max-width:120px">
+        <label style="display:flex;gap:8px;align-items:center;color:var(--text)"><input type="checkbox" id="adbKbd"> Guna ADBKeyBoard (sokong emoji &amp; huruf khas, disyorkan)</label>
+        <div class="row" style="margin-top:10px"><button class="btn" id="adbSave">Simpan</button><button class="btn pri" id="adbScan">▶️ Imbas sekarang</button></div>
+      </div>
+      <div class="card">
+        <h2>🗣️ Arahan bebas</h2>
+        <textarea id="adbTask" placeholder="cth: Buka TikTok, upload video terbaru dari galeri dengan kapsyen 'Tips jimat masa…' dan post."></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn pri" id="adbRun">Jalankan</button></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2 style="margin:0">Skrin telefon</h2><button class="btn" id="scrRefresh">🔄</button></div>
+        <img id="scr" alt="Skrin telefon" style="display:block;width:100%;max-width:320px;margin:12px auto;border-radius:12px;border:1px solid var(--line)">
+      </div>
+      <div class="card"><h2>Aktiviti ejen</h2><div id="runs" class="muted">—</div></div>
+    </div>
+  </div>
 </section>
 
 <section id="create">
@@ -172,7 +214,7 @@ async function busy(btn, fn) { btn.disabled = true; try { await fn(); } catch (e
 function go(t) {
   document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("on", b.dataset.tab === t));
   document.querySelectorAll("section").forEach((s) => s.classList.toggle("on", s.id === t));
-  ({ dash: loadStatus, accounts: loadAccounts, posts: loadPosts, inbox: loadInbox, settings: loadSettings })[t]?.();
+  ({ dash: loadStatus, phone: loadPhone, accounts: loadAccounts, posts: loadPosts, inbox: loadInbox, settings: loadSettings })[t]?.();
 }
 $("#nav").onclick = (e) => { if (e.target.dataset.tab) go(e.target.dataset.tab); };
 document.addEventListener("click", (e) => { if (e.target.dataset.goto) { e.preventDefault(); go(e.target.dataset.goto); } });
@@ -250,7 +292,7 @@ $("#postList").onclick = (e) => {
 };
 
 // ---------- Inbox ----------
-const istat = { new: ["Baharu", ""], drafted: ["Draf AI sedia", "ok"], needs_human: ["Perlu anda", "warn"], sent: ["Dibalas", "ok"], ignored: ["Diabaikan", ""], error: ["Ralat", "err"] };
+const istat = { new: ["Baharu", ""], drafted: ["Draf AI sedia", "ok"], needs_human: ["Perlu anda", "warn"], sent: ["Dibalas", "ok"], ignored: ["Diabaikan", ""], error: ["Ralat", "err"], sending: ["Sedang dihantar (telefon)…", "warn"] };
 async function loadInbox() {
   const q = new URLSearchParams({ status: $("#fStatus").value, platform: $("#fPlatform").value });
   const list = await call("/api/inbox?" + q);
@@ -367,6 +409,48 @@ $("#accounts").addEventListener("click", (e) => {
   });
 });
 window.addEventListener("message", (e) => { if (e.origin === location.origin && e.data === "oauth-done") loadAccounts(); });
+
+// ---------- Telefon (ADB) ----------
+const RUNST = { running: ["Berjalan…", "warn"], success: ["Berjaya", "ok"], failed: ["Gagal", "err"], error: ["Ralat", "err"] };
+let phoneTimer = null;
+async function loadPhone() {
+  loadDevices(); loadRuns(); refreshScreen();
+  const s = await call("/api/settings");
+  let inst = {};
+  try { inst = await call("/api/adb/apps"); } catch {}
+  $("#adbApps").innerHTML = Object.keys(ICON).map((k) => `<label><input type="checkbox" value="${k}" ${s.adb.scanApps.includes(k) ? "checked" : ""}> ${ICON[k]} ${STATUS?.platforms[k]?.name || k}${inst[k] === null ? ' <span class="muted">(tiada)</span>' : ""}</label>`).join("");
+  $("#adbEvery").value = s.adb.scanMinutes; $("#adbKbd").checked = s.adb.useAdbKeyboard;
+}
+async function loadDevices() {
+  try {
+    const d = await call("/api/adb/devices");
+    $("#devList").innerHTML = d.devices.length
+      ? d.devices.map((x) => `<label style="display:flex;gap:8px;align-items:center;color:var(--text)"><input type="radio" name="dev" value="${esc(x.serial)}" ${x.serial === d.selected || (!d.selected && d.devices.length === 1) ? "checked" : ""}> ${esc(x.model || x.serial)} <span class="muted">${esc(x.serial)}</span> <span class="pill ${x.state === "device" ? "ok" : "err"}">${x.state === "device" ? "sedia" : esc(x.state)}</span></label>`).join("") +
+        (d.devices.some((x) => x.state === "unauthorized") ? '<p class="muted">"unauthorized": buka telefon dan tekan <b>Allow USB debugging</b>.</p>' : "")
+      : "Tiada telefon dikesan. Sambung USB (aktifkan USB debugging) atau guna Wireless debugging di bawah.";
+  } catch (e) { $("#devList").innerHTML = `<span class="pill err">${esc(e.message)}</span>`; }
+}
+$("#devList").onchange = (e) => { if (e.target.name === "dev") call("/api/adb/select", { method: "POST", body: { serial: e.target.value } }).then(refreshScreen); };
+function refreshScreen() { const img = $("#scr"); img.onerror = () => (img.alt = "Skrin tidak dapat diambil"); img.src = "/api/adb/screen?t=" + Date.now(); }
+async function loadRuns() {
+  clearTimeout(phoneTimer);
+  const r = await call("/api/adb/runs");
+  $("#runs").innerHTML = r.runs.map((x) => `<div class="item"><div class="row" style="justify-content:space-between"><b>${esc(x.label)}</b><span class="pill ${RUNST[x.status][1]}">${RUNST[x.status][0]}</span></div>
+    <div class="muted">${new Date(x.startedAt).toLocaleString("ms-MY")}${x.summary ? " — " + esc(x.summary) : ""}</div>
+    <details ${x.status === "running" ? "open" : ""}><summary class="muted">${x.steps.length} langkah</summary><div class="log">${x.steps.map((s) => s.tool ? `<div>${s.error ? "❌" : "•"} ${esc(s.tool)} ${esc(JSON.stringify(s.input))} → ${esc(String(s.result).slice(0, 120))}</div>` : `<div class="muted">💭 ${esc(s.note)}</div>`).join("")}</div></details></div>`).join("") || "Belum ada aktiviti.";
+  if ($("#phone").classList.contains("on")) phoneTimer = setTimeout(() => { loadRuns(); if (r.busy) refreshScreen(); }, r.busy ? 3000 : 10000);
+}
+$("#devRefresh").onclick = loadDevices;
+$("#scrRefresh").onclick = refreshScreen;
+$("#btnPair").onclick = (e) => busy(e.target, async () => { const r = await call("/api/adb/pair", { method: "POST", body: { host: $("#pairHost").value, code: $("#pairCode").value } }); toast(r.out); });
+$("#btnConn").onclick = (e) => busy(e.target, async () => { await call("/api/adb/connect", { method: "POST", body: { host: $("#connHost").value } }); toast("✅ Disambung"); loadDevices(); });
+const adbAppsChosen = () => [...document.querySelectorAll("#adbApps input:checked")].map((i) => i.value);
+$("#adbSave").onclick = (e) => busy(e.target, async () => { await call("/api/settings", { method: "PUT", body: { adb: { scanApps: adbAppsChosen(), scanMinutes: $("#adbEvery").value, useAdbKeyboard: $("#adbKbd").checked } } }); toast("✅ Disimpan"); });
+$("#adbScan").onclick = (e) => busy(e.target, async () => { await call("/api/adb/scan", { method: "POST", body: { apps: adbAppsChosen() } }); toast("Imbasan dimulakan"); loadRuns(); });
+$("#adbRun").onclick = (e) => busy(e.target, async () => {
+  if (!confirm("Benarkan Claude mengawal telefon untuk arahan ini?")) return;
+  await call("/api/adb/task", { method: "POST", body: { instruction: $("#adbTask").value } }); toast("Ejen dimulakan"); loadRuns();
+});
 
 // ---------- Tetapan ----------
 async function loadSettings() {

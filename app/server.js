@@ -5,7 +5,9 @@ import path from "node:path";
 import { db, save, newId, log } from "./lib/db.js";
 import { PLATFORMS } from "./lib/platforms/index.js";
 import { generateContent, generateIdeas, aiEnabled } from "./lib/ai.js";
-import { ingest, sendReply, processEntry, publishPost, pollAll, startScheduler } from "./lib/engine.js";
+import { ingest, sendReply, processEntry, publishPost, pollAll, startScheduler, scanPhone } from "./lib/engine.js";
+import * as adb from "./lib/adb.js";
+import * as phone from "./lib/phoneAgent.js";
 import { authorizeUrl, handleCallback, oauthReady, setAccount, removeAccount } from "./lib/accounts.js";
 
 const app = express();
@@ -136,6 +138,12 @@ app.put("/api/settings", wrap((req, res) => {
   const b = req.body;
   for (const k of ["brandName", "brandVoice", "businessInfo"]) if (typeof b[k] === "string") s[k] = b[k];
   if (b.pollMinutes) s.pollMinutes = Math.max(1, Number(b.pollMinutes));
+  if (b.adb) {
+    const a = s.adb;
+    if (Array.isArray(b.adb.scanApps)) a.scanApps = b.adb.scanApps.filter((x) => adb.APPS[x]);
+    if (b.adb.scanMinutes !== undefined) a.scanMinutes = Math.max(0, Number(b.adb.scanMinutes) || 0);
+    if (b.adb.useAdbKeyboard !== undefined) a.useAdbKeyboard = Boolean(b.adb.useAdbKeyboard);
+  }
   if (b.replyMode) {
     for (const [k, v] of Object.entries(b.replyMode)) {
       if (k in s.replyMode && ["off", "approve", "auto"].includes(v)) s.replyMode[k] = v;
@@ -221,7 +229,7 @@ app.get("/api/inbox", (req, res) => {
   const { status, platform } = req.query;
   let list = db().inbox;
   if (platform) list = list.filter((e) => e.platform === platform);
-  if (status === "pending") list = list.filter((e) => ["new", "drafted", "needs_human", "error"].includes(e.status));
+  if (status === "pending") list = list.filter((e) => ["new", "drafted", "needs_human", "error", "sending"].includes(e.status));
   else if (status) list = list.filter((e) => e.status === status);
   res.json(list.slice(0, 300));
 });
@@ -236,6 +244,15 @@ app.post("/api/inbox/:id/send", wrap(async (req, res) => {
   const e = findEntry(req.params.id);
   const text = (req.body.text ?? e.draft ?? "").trim();
   if (!text) throw new Error("Teks balasan kosong");
+  if (e.threadRef?.via === "adb") {
+    // Ejen telefon boleh ambil masa beberapa minit — jalankan di latar belakang
+    sendReply(e, text).catch((err) => {
+      e.status = "error";
+      e.error = err.message;
+      save();
+    });
+    return res.json(e);
+  }
   try {
     await sendReply(e, text);
   } catch (err) {
@@ -303,6 +320,45 @@ app.post("/api/connect/telegram", wrap(async (req, res) => {
   log("info", `Telegram disambung (@${botUsername})`);
   res.json({ ok: true, botUsername, webhook });
 }));
+
+// ---------- Telefon (ADB) ----------
+app.get("/api/adb/devices", wrap(async (req, res) => {
+  res.json({ devices: await adb.devices(), selected: db().settings.adb.serial, busy: phone.busy()?.label || null });
+}));
+app.post("/api/adb/pair", wrap(async (req, res) => {
+  res.json({ out: await adb.pair(String(req.body.host || ""), String(req.body.code || "")) });
+}));
+app.post("/api/adb/connect", wrap(async (req, res) => {
+  const out = await adb.connect(String(req.body.host || ""));
+  if (/cannot|failed|unable/i.test(out)) throw new Error(out.trim());
+  res.json({ out });
+}));
+app.post("/api/adb/select", wrap((req, res) => {
+  db().settings.adb.serial = String(req.body.serial || "");
+  save();
+  res.json({ ok: true });
+}));
+app.get("/api/adb/screen", wrap(async (req, res) => {
+  res.type("png").send(await adb.screenshot());
+}));
+app.get("/api/adb/apps", wrap(async (req, res) => {
+  const out = {};
+  for (const k of Object.keys(adb.APPS)) out[k] = await adb.installedPackage(k);
+  res.json(out);
+}));
+app.post("/api/adb/scan", wrap((req, res) => {
+  const apps = (req.body.apps ?? db().settings.adb.scanApps).filter((a) => adb.APPS[a]);
+  if (!apps.length) throw new Error("Pilih sekurang-kurangnya satu app");
+  scanPhone(apps);
+  res.json({ ok: true, queued: apps });
+}));
+app.post("/api/adb/task", wrap((req, res) => {
+  const instruction = String(req.body.instruction || "").trim();
+  if (!instruction) throw new Error("Arahan kosong");
+  phone.task(instruction).catch(() => {});
+  res.json({ ok: true });
+}));
+app.get("/api/adb/runs", (req, res) => res.json({ busy: phone.busy()?.id || null, runs: (db().adbRuns ?? []).slice(0, 20) }));
 
 app.get("/api/whatsapp/status", (req, res) => res.json(PLATFORMS.whatsapp.status()));
 app.post("/api/whatsapp/link", wrap(async (req, res) => {

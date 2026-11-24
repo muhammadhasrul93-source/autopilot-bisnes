@@ -3,11 +3,12 @@ import { db, save, newId, log, markSeen } from "./db.js";
 import { PLATFORMS } from "./platforms/index.js";
 import { draftReply, aiEnabled } from "./ai.js";
 import { refreshTokens } from "./accounts.js";
+import * as phone from "./phoneAgent.js";
 
 /** Masukkan item baharu ke inbox dan proses ikut mode balasan. */
-export async function ingest(item) {
-  if (!item?.text) return;
-  if (!markSeen(`${item.platform}:${item.externalId}`)) return;
+export async function ingest(item, { defer = false } = {}) {
+  if (!item?.text) return null;
+  if (!markSeen(`${item.platform}:${item.externalId}`)) return null;
   const entry = {
     id: newId(),
     ...item,
@@ -19,7 +20,8 @@ export async function ingest(item) {
   db().inbox.unshift(entry);
   db().inbox = db().inbox.slice(0, 2000);
   save();
-  await processEntry(entry);
+  if (!defer) await processEntry(entry);
+  return entry;
 }
 
 function historyFor(entry) {
@@ -61,13 +63,21 @@ export async function processEntry(entry) {
 
 export async function sendReply(entry, text) {
   const p = PLATFORMS[entry.platform];
-  if (!entry.simulated) await p.reply(entry.threadRef, text);
+  if (entry.simulated) {
+    // tiada apa dihantar
+  } else if (entry.threadRef?.via === "adb") {
+    entry.status = "sending";
+    save();
+    await phone.reply(entry.threadRef, text);
+  } else {
+    await p.reply(entry.threadRef, text);
+  }
   entry.reply = text;
   entry.status = "sent";
   entry.repliedAt = new Date().toISOString();
   entry.error = undefined;
   save();
-  log("info", `Balasan dihantar ke ${p.name} (${entry.from || entry.externalId})`);
+  log("info", `Balasan dihantar ke ${p.name}${entry.threadRef?.via === "adb" ? " (telefon)" : ""} (${entry.from || entry.externalId})`);
 }
 
 /** Publish satu post ke semua platform terpilih. */
@@ -98,6 +108,7 @@ export async function publishPost(post) {
 }
 
 let lastPoll = 0;
+let lastAdbScan = Date.now();
 let lastRefresh = 0;
 let ticking = false;
 
@@ -110,6 +121,11 @@ async function tick() {
       if (post.status === "scheduled" && new Date(post.scheduledAt).getTime() <= now) {
         await publishPost(post);
       }
+    }
+    const adbCfg = db().settings.adb;
+    if (adbCfg.scanApps?.length && adbCfg.scanMinutes > 0 && !phone.busy() && now - lastAdbScan >= adbCfg.scanMinutes * 60_000) {
+      lastAdbScan = now;
+      scanPhone(adbCfg.scanApps); // jalan di latar belakang
     }
     if (now - lastRefresh >= 3_600_000) {
       lastRefresh = now;
@@ -149,6 +165,24 @@ export async function pollAll() {
     } catch (e) {
       log("error", `Polling ${name}: ${e.message}`);
     }
+  }
+}
+
+/** Imbas app pada telefon melalui ADB dan masukkan mesej ke inbox. */
+export async function scanPhone(apps) {
+  for (const app of apps) {
+    // Proses (draf/auto-balas) SELEPAS imbasan tamat — telefon hanya boleh buat satu tugas pada satu masa
+    const found = [];
+    try {
+      await phone.scan(app, async (item) => {
+        const e = await ingest(item, { defer: true });
+        if (e) found.push(e);
+        return Boolean(e);
+      });
+    } catch (e) {
+      log("error", `Imbas telefon ${app}: ${e.message}`);
+    }
+    for (const e of found) await processEntry(e);
   }
 }
 

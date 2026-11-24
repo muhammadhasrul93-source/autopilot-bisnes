@@ -21,6 +21,8 @@ const DEFAULTS = {
       tiktok: "approve",
     },
     pollMinutes: 5,
+    // Ejen Telefon (ADB)
+    adb: { serial: "", scanApps: [], scanMinutes: 30, useAdbKeyboard: false },
   },
   posts: [], // {id, brief, platforms, captions{}, mediaUrl, mediaType, status, scheduledAt, results{}, createdAt}
   inbox: [], // {id, platform, kind:'comment'|'dm', externalId, threadRef, from, text, receivedAt, status, draft, reply, error}
@@ -41,6 +43,7 @@ function load() {
         ...DEFAULTS.settings,
         ...raw.settings,
         replyMode: { ...DEFAULTS.settings.replyMode, ...raw.settings?.replyMode },
+        adb: { ...DEFAULTS.settings.adb, ...raw.settings?.adb },
       },
     };
   } else {

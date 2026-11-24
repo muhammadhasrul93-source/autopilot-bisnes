@@ -89,6 +89,31 @@ Semasa app Meta dan TikTok masih dalam mod *Development*, hanya akaun yang didaf
 
 **Claude AI**: dapatkan API key di console.anthropic.com → `ANTHROPIC_API_KEY`.
 
+## Mod Telefon (ADB): Claude kawal telefon Android anda
+
+Untuk perkara yang API rasmi tak benarkan (DM TikTok, DM Threads, atau jika anda tak mahu daftar app pembangun), app ini boleh guna **telefon Android anda sendiri melalui ADB**. Claude akan lihat skrin (screenshot + senarai elemen UI), kemudian tekan, leret dan taip dalam app TikTok, Instagram, Threads, WhatsApp atau Telegram, sama seperti manusia.
+
+**Apa yang ia buat**
+- **Imbas**: buka app, cari komen & DM baharu, dan masukkan ke Inbox. Mod ini tidak boleh menaip langsung.
+- **Balas**: untuk mesej dari telefon, butang *Hantar* (atau mod Auto) akan suruh ejen cari mesej itu dan taip **teks balasan yang tepat** sahaja. Ejen tidak boleh ubah teks.
+- **Arahan bebas**: cth "upload video terbaru dari galeri ke TikTok dengan kapsyen …".
+- Setiap langkah ejen direkodkan dalam tab *Telefon (ADB)*, dan skrin telefon boleh dilihat secara langsung.
+- Hanya satu tugas berjalan pada satu masa. Selepas selesai, telefon kembali ke skrin utama.
+
+**Persediaan**
+1. Pasang [Android platform-tools](https://developer.android.com/tools/releases/platform-tools) (`adb`) pada komputer yang menjalankan app ini (atau set `ADB_PATH`).
+2. Telefon: aktifkan *Pilihan pembangun* → **USB debugging**. Sambung USB dan tekan *Allow*.
+   Tanpa wayar (Android 11+): aktifkan **Wireless debugging**, kemudian Pair & Sambung dari tab *Telefon (ADB)*.
+3. (Disyorkan) Pasang **ADBKeyBoard** dan jadikannya papan kekunci aktif supaya emoji & aksara khas boleh ditaip. Kemudian tandakan pilihan itu dalam tab Telefon. Tanpa ADBKeyBoard, hanya huruf ASCII dihantar.
+4. Log masuk akaun dalam app di telefon seperti biasa. Biarkan telefon dicas dan skrin tidak berkunci (atau tanpa PIN).
+5. Pilih app untuk diimbas, dan set selang masa (lalai 30 minit).
+
+**Nota penting**
+- App ini mesti berjalan pada **komputer yang disambung ke telefon** (atau rangkaian yang sama untuk wireless), bukan di cloud. Jika perlukan URL HTTPS untuk OAuth/webhook, guna tunnel seperti Cloudflare Tunnel.
+- Setiap imbasan/balasan ialah beberapa panggilan Claude dengan screenshot. Ini lebih mahal berbanding API biasa, jadi jangan set selang terlalu kerap.
+- Automasi UI melanggar terma kebanyakan platform, jadi ada risiko akaun disekat. Ejen sengaja bergerak perlahan seperti manusia, tetapi elakkan balasan pukal.
+- UI app sentiasa berubah. Jika ejen gagal, lihat log langkah dalam tab Telefon.
+
 ## Tips supaya balasan AI tepat
 Isi **Tetapan → Maklumat bisnes** selengkap mungkin: senarai produk & harga, cara bayar, link order, waktu operasi, polisi pulangan dan FAQ. AI diarah untuk **tidak mereka** maklumat yang tiada di situ; soalan sebegitu akan ditanda *Perlu anda*.
 
@@ -99,6 +124,8 @@ app/
   lib/ai.js              # Claude: jana kandungan, idea, draf balasan
   lib/engine.js          # inbox, auto-balas, penjadual post, polling
   lib/accounts.js        # OAuth log masuk & pembaharuan token
+  lib/adb.js             # kawalan telefon Android (adb)
+  lib/phoneAgent.js      # ejen Claude yang kawal telefon (imbas/balas/arahan)
   lib/db.js              # stor JSON (data/db.json)
   lib/platforms/*.js     # integrasi TikTok, Instagram, Threads, Telegram, WhatsApp
   public/index.html      # dashboard
