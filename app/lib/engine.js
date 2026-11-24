@@ -4,6 +4,7 @@ import { PLATFORMS } from "./platforms/index.js";
 import { draftReply, aiEnabled } from "./ai.js";
 import { refreshTokens } from "./accounts.js";
 import * as phone from "./phoneAgent.js";
+import { matchQuickReply } from "./quickReplies.js";
 
 /** Masukkan item baharu ke inbox dan proses ikut mode balasan. */
 export async function ingest(item, { defer = false } = {}) {
@@ -38,7 +39,24 @@ function historyFor(entry) {
 
 export async function processEntry(entry) {
   const mode = db().settings.replyMode[entry.platform] ?? "off";
-  if (mode === "off" || !aiEnabled()) return;
+  if (mode === "off") return;
+  // 1. Jawapan pantas (tanpa AI, percuma)
+  const qr = matchQuickReply(entry);
+  if (qr) {
+    entry.draft = qr.reply;
+    entry.aiNote = `Templat kata kunci: "${qr.keyword}"`;
+    try {
+      if (mode === "auto") await sendReply(entry, qr.reply);
+      else entry.status = "drafted";
+    } catch (e) {
+      entry.status = "error";
+      entry.error = e.message;
+    }
+    upsert("inbox", entry);
+    return;
+  }
+  // 2. AI
+  if (!aiEnabled()) return;
   try {
     const r = await draftReply({
       platform: entry.platform,

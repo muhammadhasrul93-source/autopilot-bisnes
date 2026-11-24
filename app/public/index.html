@@ -96,6 +96,7 @@ ol{padding-left:20px;margin:8px 0}
         <div class="chips" id="adbApps"></div>
         <label>Imbas automatik setiap (minit, 0 = mati)</label><input type="number" id="adbEvery" min="0" style="max-width:120px">
         <label style="display:flex;gap:8px;align-items:center;color:var(--text)"><input type="checkbox" id="adbKbd"> Guna ADBKeyBoard (sokong emoji &amp; huruf khas, disyorkan)</label>
+        <label style="display:flex;gap:8px;align-items:center;color:var(--text)"><input type="checkbox" id="adbShot"> Sentiasa hantar screenshot (lebih tepat, tetapi jauh lebih mahal)</label>
         <div class="row" style="margin-top:10px"><button class="btn" id="adbSave">Simpan</button><button class="btn pri" id="adbScan">▶️ Imbas sekarang</button></div>
       </div>
       <div class="card">
@@ -189,6 +190,17 @@ ol{padding-left:20px;margin:8px 0}
     <p class="muted"><b>Luluskan</b> = AI draf, anda tekan hantar. <b>Auto</b> = AI terus hantar (kecuali soalan yang AI tanda perlu manusia). Disyorkan mula dengan "Luluskan".</p>
     <table id="modes"></table>
     <label>Semak komen Threads/Instagram setiap (minit)</label><input type="number" id="sPoll" min="1" style="max-width:120px">
+  </div>
+  <div class="card">
+    <h2>⚡ Jawapan pantas (tanpa AI, percuma)</h2>
+    <p class="muted">Jika mesej mengandungi kata kunci, templat ini digunakan terus tanpa panggil AI. Ia tetap ikut mod di atas: <i>Luluskan</i> = jadi draf, <i>Auto</i> = terus hantar. Kata kunci dipisah koma dan tidak peka huruf besar/kecil.</p>
+    <div id="qrList"></div>
+    <div class="row" style="margin-top:8px"><button class="btn" id="qrAdd">+ Tambah templat</button></div>
+  </div>
+  <div class="card">
+    <h2>🤖 Model AI ikut tugas</h2>
+    <p class="muted">Untuk ciri AI dalam app web sahaja (guna API key). Haiku paling murah, Opus paling bijak. Kit Claude menggunakan model yang dipilih dalam Claude Code (<code>/model</code>).</p>
+    <table id="modelTbl"></table>
   </div>
   <div class="row"><button class="btn pri" id="btnSave">Simpan tetapan</button></div>
 </section>
@@ -419,7 +431,7 @@ async function loadPhone() {
   let inst = {};
   try { inst = await call("/api/adb/apps"); } catch {}
   $("#adbApps").innerHTML = Object.keys(ICON).map((k) => `<label><input type="checkbox" value="${k}" ${s.adb.scanApps.includes(k) ? "checked" : ""}> ${ICON[k]} ${STATUS?.platforms[k]?.name || k}${inst[k] === null ? ' <span class="muted">(tiada)</span>' : ""}</label>`).join("");
-  $("#adbEvery").value = s.adb.scanMinutes; $("#adbKbd").checked = s.adb.useAdbKeyboard;
+  $("#adbEvery").value = s.adb.scanMinutes; $("#adbKbd").checked = s.adb.useAdbKeyboard; $("#adbShot").checked = s.adb.screenshotMode === "always";
 }
 async function loadDevices() {
   try {
@@ -445,7 +457,7 @@ $("#scrRefresh").onclick = refreshScreen;
 $("#btnPair").onclick = (e) => busy(e.target, async () => { const r = await call("/api/adb/pair", { method: "POST", body: { host: $("#pairHost").value, code: $("#pairCode").value } }); toast(r.out); });
 $("#btnConn").onclick = (e) => busy(e.target, async () => { await call("/api/adb/connect", { method: "POST", body: { host: $("#connHost").value } }); toast("✅ Disambung"); loadDevices(); });
 const adbAppsChosen = () => [...document.querySelectorAll("#adbApps input:checked")].map((i) => i.value);
-$("#adbSave").onclick = (e) => busy(e.target, async () => { await call("/api/settings", { method: "PUT", body: { adb: { scanApps: adbAppsChosen(), scanMinutes: $("#adbEvery").value, useAdbKeyboard: $("#adbKbd").checked } } }); toast("✅ Disimpan"); });
+$("#adbSave").onclick = (e) => busy(e.target, async () => { await call("/api/settings", { method: "PUT", body: { adb: { scanApps: adbAppsChosen(), scanMinutes: $("#adbEvery").value, useAdbKeyboard: $("#adbKbd").checked, screenshotMode: $("#adbShot").checked ? "always" : "auto" } } }); toast("✅ Disimpan"); });
 $("#adbScan").onclick = (e) => busy(e.target, async () => { await call("/api/adb/scan", { method: "POST", body: { apps: adbAppsChosen() } }); toast("Imbasan dimulakan"); loadRuns(); });
 $("#adbRun").onclick = (e) => busy(e.target, async () => {
   if (!confirm("Benarkan Claude mengawal telefon untuk arahan ini?")) return;
@@ -460,10 +472,24 @@ async function loadSettings() {
     const p = STATUS?.platforms[k]; const can = p ? p.canComment || p.canDM : true;
     return `<tr><td>${ICON[k]} ${p?.name || k}</td><td>${can ? `<select data-mode="${k}">${["off", "approve", "auto"].map((o) => `<option value="${o}" ${o === v ? "selected" : ""}>${{ off: "Mati", approve: "Luluskan dahulu", auto: "Auto hantar" }[o]}</option>`).join("")}</select>` : '<span class="muted">Tidak disokong oleh API platform</span>'}</td></tr>`;
   }).join("");
+  renderQR(s.quickReplies.length ? s.quickReplies : [{ keywords: "harga, berapa, price", reply: "", kind: "all" }]);
+  const NAMES = { "claude-haiku-5-5": "Haiku 5.5 (paling murah)", "claude-sonnet-5-5": "Sonnet 5.5 (seimbang)", "claude-opus-5-5": "Opus 5.5 (paling bijak)" };
+  $("#modelTbl").innerHTML = [["reply", "Draf balasan komen/DM"], ["phone", "Ejen telefon (ADB)"], ["content", "Cipta kandungan & idea"]].map(([k, l]) =>
+    `<tr><td>${l}</td><td><select data-model="${k}"><option value="">Lalai: ${esc(NAMES[s.effectiveModels[k]] || s.effectiveModels[k])}</option>${s.modelChoices.map((m) => `<option value="${m}" ${s.models[k] === m ? "selected" : ""}>${NAMES[m] || m}</option>`).join("")}</select></td></tr>`).join("");
 }
+function renderQR(list) {
+  $("#qrList").innerHTML = list.map((q) => `<div class="item qr-row">
+    <label>Kata kunci</label><input type="text" class="qk" value="${esc(q.keywords)}" placeholder="harga, berapa, price">
+    <label>Jawapan</label><textarea class="qa" style="min-height:70px" placeholder="Harga ebook RM39 sahaja 😊 Order di link bio ya!">${esc(q.reply)}</textarea>
+    <div class="row" style="margin-top:6px"><select class="qkind" style="width:auto">${[["all", "Komen & DM"], ["comment", "Komen sahaja"], ["dm", "DM sahaja"]].map(([v, l]) => `<option value="${v}" ${q.kind === v ? "selected" : ""}>${l}</option>`).join("")}</select><button class="btn" data-qrdel>Buang</button></div></div>`).join("");
+}
+const collectQR = () => [...document.querySelectorAll(".qr-row")].map((r) => ({ keywords: r.querySelector(".qk").value, reply: r.querySelector(".qa").value, kind: r.querySelector(".qkind").value }));
+$("#qrAdd").onclick = () => renderQR([...collectQR(), { keywords: "", reply: "", kind: "all" }]);
+$("#qrList").onclick = (e) => { if (e.target.hasAttribute("data-qrdel")) { e.target.closest(".qr-row").remove(); } };
 $("#btnSave").onclick = (e) => busy(e.target, async () => {
   const replyMode = {}; document.querySelectorAll("[data-mode]").forEach((s) => (replyMode[s.dataset.mode] = s.value));
-  await call("/api/settings", { method: "PUT", body: { brandName: $("#sBrand").value, brandVoice: $("#sVoice").value, businessInfo: $("#sInfo").value, pollMinutes: $("#sPoll").value, replyMode } });
+  await call("/api/settings", { method: "PUT", body: { brandName: $("#sBrand").value, brandVoice: $("#sVoice").value, businessInfo: $("#sInfo").value, pollMinutes: $("#sPoll").value, replyMode, quickReplies: collectQR(),
+    models: Object.fromEntries([...document.querySelectorAll("[data-model]")].map((s) => [s.dataset.model, s.value])) } });
   toast("✅ Disimpan");
 });
 

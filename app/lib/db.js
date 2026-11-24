@@ -26,7 +26,11 @@ const DEFAULTS = {
     },
     pollMinutes: 5,
     // Ejen Telefon (ADB)
-    adb: { serial: "", scanApps: [], scanMinutes: 30, useAdbKeyboard: false },
+    adb: { serial: "", scanApps: [], scanMinutes: 60, useAdbKeyboard: false, screenshotMode: "auto" },
+    // Jawapan pantas tanpa AI: [{ keywords: "harga, price", reply: "...", kind: "all"|"comment"|"dm", platforms: [] }]
+    quickReplies: [],
+    // Model ikut tugas (kosong = lalai / .env)
+    models: { reply: "", phone: "", content: "" },
   },
   posts: [], // {id, brief, platforms, captions{}, mediaUrl, mediaType, status, scheduledAt, results{}, createdAt}
   inbox: [], // {id, platform, kind:'comment'|'dm', externalId, threadRef, from, text, receivedAt, status, draft, reply, error}
@@ -50,6 +54,7 @@ function load() {
         ...raw.settings,
         replyMode: { ...DEFAULTS.settings.replyMode, ...raw.settings?.replyMode },
         adb: { ...DEFAULTS.settings.adb, ...raw.settings?.adb },
+        models: { ...DEFAULTS.settings.models, ...raw.settings?.models },
       },
     };
   } else {

@@ -4,7 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { db, save, newId, log, APP_DIR } from "./lib/db.js";
 import { PLATFORMS } from "./lib/platforms/index.js";
-import { generateContent, generateIdeas, aiEnabled } from "./lib/ai.js";
+import { generateContent, generateIdeas, aiEnabled, MODEL_CHOICES, modelFor } from "./lib/ai.js";
+import { sanitizeQuickReplies } from "./lib/quickReplies.js";
 import { ingest, sendReply, processEntry, publishPost, pollAll, startScheduler, scanPhone } from "./lib/engine.js";
 import * as adb from "./lib/adb.js";
 import * as phone from "./lib/phoneAgent.js";
@@ -132,14 +133,23 @@ app.get("/api/status", (req, res) => {
   });
 });
 
-app.get("/api/settings", (req, res) => res.json(db().settings));
+app.get("/api/settings", (req, res) =>
+  res.json({ ...db().settings, modelChoices: MODEL_CHOICES, effectiveModels: { reply: modelFor("reply"), phone: modelFor("phone"), content: modelFor("content") } })
+);
 app.put("/api/settings", wrap((req, res) => {
   const s = db().settings;
   const b = req.body;
   for (const k of ["brandName", "brandVoice", "businessInfo"]) if (typeof b[k] === "string") s[k] = b[k];
   if (b.pollMinutes) s.pollMinutes = Math.max(1, Number(b.pollMinutes));
+  if (b.quickReplies) s.quickReplies = sanitizeQuickReplies(b.quickReplies);
+  if (b.models) {
+    for (const k of ["reply", "phone", "content"]) {
+      if (k in b.models) s.models[k] = MODEL_CHOICES.includes(b.models[k]) ? b.models[k] : "";
+    }
+  }
   if (b.adb) {
     const a = s.adb;
+    if (["auto", "always"].includes(b.adb.screenshotMode)) a.screenshotMode = b.adb.screenshotMode;
     if (Array.isArray(b.adb.scanApps)) a.scanApps = b.adb.scanApps.filter((x) => adb.APPS[x]);
     if (b.adb.scanMinutes !== undefined) a.scanMinutes = Math.max(0, Number(b.adb.scanMinutes) || 0);
     if (b.adb.useAdbKeyboard !== undefined) a.useAdbKeyboard = Boolean(b.adb.useAdbKeyboard);

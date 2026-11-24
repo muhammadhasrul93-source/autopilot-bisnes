@@ -133,6 +133,15 @@ Untuk perkara yang API rasmi tak benarkan (DM TikTok, DM Threads, atau jika anda
 - Automasi UI melanggar terma kebanyakan platform, jadi ada risiko akaun disekat. Ejen sengaja bergerak perlahan seperti manusia, tetapi elakkan balasan pukal.
 - UI app sentiasa berubah. Jika ejen gagal, lihat log langkah dalam tab Telefon.
 
+## Cara paling jimat
+
+Susunan dari paling murah:
+1. **Jawapan pantas (Tetapan):** templat ikut kata kunci, dibalas **tanpa AI**. Padanan dibuat di awal perkataan, jadi "harga" turut sepadan dengan "harganya". Ia tetap ikut mod Luluskan/Auto.
+2. **API rasmi / sambungan terus** (Telegram, WhatsApp peranti dipautkan, Instagram, Threads, komen TikTok). AI hanya draf teks.
+3. **Model ikut tugas** (Tetapan → Model AI, atau `.env` `CLAUDE_MODEL_REPLY` / `CLAUDE_MODEL_PHONE` / `CLAUDE_MODEL_CONTENT`). Lalai: Haiku 5.5 untuk draf balasan, Sonnet 5.5 untuk ejen telefon, Opus 5.5 untuk cipta kandungan.
+4. **Telefon (ADB)** hanya untuk yang tiada API (DM TikTok/Threads), disemak jarang (lalai 60 minit).
+   Skrin dihantar sebagai **senarai teks elemen UI**. Screenshot hanya dihantar bila skrin tiada teks (cth video bermain) atau bila AI memintanya. Untuk sentiasa hantar screenshot (lebih tepat tetapi lebih mahal), tanda pilihan di tab Telefon.
+
 ## Tips supaya balasan AI tepat
 Isi **Tetapan → Maklumat bisnes** selengkap mungkin: senarai produk & harga, cara bayar, link order, waktu operasi, polisi pulangan dan FAQ. AI diarah untuk **tidak mereka** maklumat yang tiada di situ; soalan sebegitu akan ditanda *Perlu anda*.
 

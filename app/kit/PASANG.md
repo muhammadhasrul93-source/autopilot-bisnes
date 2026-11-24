@@ -103,6 +103,17 @@ Nota tentang `/loop`:
 - Biarkan terminal terbuka dan komputer tidak tidur.
 - Untuk berhenti, tekan `Esc` atau tutup sesi.
 
+### Cara paling jimat
+
+1. **Jawapan pantas:** isi templat untuk soalan lazim (harga, cara order, lokasi). Mesej yang sepadan terus guna templat. Beritahu Claude:
+   > "Tambah jawapan pantas: kata kunci 'harga, berapa' → 'Harga ebook RM39 sahaja 😊 Order di link bio ya!'"
+
+   Atau isi di dashboard → Tetapan → Jawapan pantas.
+2. **Guna model Sonnet** untuk kerja rutin: taip `/model sonnet` sebelum `/loop`. Had langganan bertahan lebih lama berbanding Opus.
+3. **Kurangkan kekerapan:** `/loop 60m` (atau 2 hingga 3 kali sehari), dan hadkan app yang disemak, cth `semak_dan_balas tiktok,whatsapp`.
+4. **Sambungkan API** untuk Instagram, Threads dan Telegram di dashboard. Claude akan menarik komen sebagai teks, tanpa perlu buka app di telefon.
+5. **Skrin teks:** Claude membaca skrin sebagai senarai teks secara lalai, dan screenshot hanya dihantar bila perlu. Jangan minta Claude "tengok gambar skrin" kecuali perlu.
+
 ## 6. Guna dengan Claude Desktop (pilihan)
 
 Selepas `npm run pasang -- --desktop`, **tutup sepenuhnya** Claude Desktop (Quit) dan buka semula.

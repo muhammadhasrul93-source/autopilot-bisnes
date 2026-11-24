@@ -4,12 +4,23 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { db } from "./db.js";
 
-const MODEL = process.env.CLAUDE_MODEL || "claude-opus-5-5";
 let client;
 const ai = () => (client ??= new Anthropic());
 
-// Server-side fallback: jika model utama menolak permintaan, API cuba model lain secara automatik.
-const FALLBACK = { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" };
+// Model ikut tugas (boleh ditukar di Tetapan atau .env). Draf balasan ringkas tidak perlukan model paling mahal.
+export const MODEL_CHOICES = ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"];
+const DEFAULT_MODELS = { reply: "claude-haiku-5-5", phone: "claude-sonnet-5-5", content: "claude-opus-5-5" };
+const ENV_MODELS = { reply: "CLAUDE_MODEL_REPLY", phone: "CLAUDE_MODEL_PHONE", content: "CLAUDE_MODEL_CONTENT" };
+export function modelFor(task) {
+  return db().settings.models?.[task] || process.env[ENV_MODELS[task]] || process.env.CLAUDE_MODEL || DEFAULT_MODELS[task];
+}
+
+// Server-side fallback: jika model menolak permintaan, API cuba model lain secara automatik.
+// (Haiku tidak menyokong fallback pihak server.)
+export function fallbackFor(model, extraBetas = []) {
+  if (model.startsWith("claude-haiku")) return extraBetas.length ? { betas: extraBetas } : {};
+  return { betas: [...extraBetas, "server-side-fallback-2026-07-01"], fallbacks: "default" };
+}
 
 const PLATFORM_RULES = {
   tiktok: "TikTok: kapsyen pendek (maks ~150 aksara sebelum hashtag), hook kuat di ayat pertama, 3-5 hashtag relevan.",
@@ -57,10 +68,11 @@ export async function generateContent({ brief, platforms, extra = "" }) {
   });
 
   const rules = platforms.map((p) => `- ${PLATFORM_RULES[p]}`).join("\n");
+  const model = modelFor("content");
   const res = await ai().beta.messages.parse({
-    model: MODEL,
+    model,
     max_tokens: 16000,
-    ...FALLBACK,
+    ...fallbackFor(model),
     output_config: { effort: "medium", format: betaZodOutputFormat(Schema) },
     system: systemPrompt(
       "Anda copywriter media sosial untuk bisnes kecil di Malaysia. Tulis kandungan asli, menarik dan jujur — jangan reka testimoni, statistik atau tawaran yang tiada dalam maklumat bisnes."
@@ -85,10 +97,11 @@ ${rules}
 /** Jana idea kandungan untuk kalendar. */
 export async function generateIdeas({ topic, count = 7 }) {
   const Schema = z.object({ ideas: z.array(z.object({ title: z.string(), brief: z.string() })) });
+  const model = modelFor("content");
   const res = await ai().beta.messages.parse({
-    model: MODEL,
+    model,
     max_tokens: 16000,
-    ...FALLBACK,
+    ...fallbackFor(model),
     output_config: { effort: "medium", format: betaZodOutputFormat(Schema) },
     system: systemPrompt("Anda strategis kandungan media sosial untuk bisnes kecil di Malaysia."),
     messages: [
@@ -112,10 +125,11 @@ export async function draftReply({ platform, kind, from, text, history = [] }) {
   const convo = history.length
     ? `Sejarah perbualan terkini:\n${history.map((h) => `${h.who}: ${h.text}`).join("\n")}\n\n`
     : "";
+  const model = modelFor("reply");
   const res = await ai().beta.messages.parse({
-    model: MODEL,
+    model,
     max_tokens: 4000,
-    ...FALLBACK,
+    ...fallbackFor(model),
     output_config: { effort: "low", format: betaZodOutputFormat(Schema) },
     system: systemPrompt(
       `Anda admin media sosial yang membalas ${kind === "dm" ? "mesej peribadi (DM)" : "komen awam"} bagi pihak bisnes ini.

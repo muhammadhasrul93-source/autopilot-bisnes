@@ -182,3 +182,18 @@ export async function pushMedia(localPath, name) {
   await run(["shell", "am", "broadcast", "-a", "android.intent.action.MEDIA_SCANNER_SCAN_FILE", "-d", `file://${remote}`]).catch(() => {});
   return remote;
 }
+
+/** Senarai elemen ringkas (jimat token). scale: bahagi koordinat (untuk imej dikecilkan). */
+export function formatElements(els, scale = 1) {
+  return els
+    .map((e, i) => {
+      const label = [e.text && `"${e.text}"`, e.desc && e.desc !== e.text && `(${e.desc})`].filter(Boolean).join(" ");
+      const what = label || [e.id, e.cls].filter(Boolean).join("/");
+      const flag = e.editable ? " ✎" : e.clickable ? " •" : "";
+      return `${i}${flag} ${what} @${Math.round(e.x / scale)},${Math.round(e.y / scale)}`;
+    })
+    .join("\n");
+}
+
+/** Perlu screenshot? "always" = sentiasa; selain itu hanya bila diminta atau tiada elemen teks. */
+export const wantImage = (requested, els) => db().settings.adb?.screenshotMode === "always" || Boolean(requested) || els.length === 0;
