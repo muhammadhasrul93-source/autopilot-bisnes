@@ -132,6 +132,7 @@ export async function pollAll() {
   const jobs = [];
   if (PLATFORMS.threads.configured()) jobs.push(["threads", () => PLATFORMS.threads.pollReplies()]);
   if (PLATFORMS.instagram.configured()) jobs.push(["instagram", () => PLATFORMS.instagram.pollComments()]);
+  if (PLATFORMS.tiktok.commentsConnected()) jobs.push(["tiktok", () => PLATFORMS.tiktok.pollComments()]);
   for (const [name, fn] of jobs) {
     try {
       const items = await fn();

@@ -18,7 +18,7 @@ const DEFAULTS = {
       whatsapp: "approve",
       instagram: "approve",
       threads: "approve",
-      tiktok: "off",
+      tiktok: "approve",
     },
     pollMinutes: 5,
   },

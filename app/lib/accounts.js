@@ -39,6 +39,7 @@ const APPS = {
   instagram: () => ({ id: process.env.INSTAGRAM_APP_ID, secret: process.env.INSTAGRAM_APP_SECRET }),
   threads: () => ({ id: process.env.THREADS_APP_ID, secret: process.env.THREADS_APP_SECRET }),
   tiktok: () => ({ id: process.env.TIKTOK_CLIENT_KEY, secret: process.env.TIKTOK_CLIENT_SECRET }),
+  tiktokBiz: () => ({ id: process.env.TIKTOK_BIZ_APP_ID, secret: process.env.TIKTOK_BIZ_APP_SECRET }),
 };
 export const oauthReady = (p) => Boolean(APPS[p]?.().id && APPS[p]().secret);
 
@@ -46,6 +47,7 @@ const SCOPES = {
   instagram: "instagram_business_basic,instagram_business_content_publish,instagram_business_manage_comments,instagram_business_manage_messages",
   threads: "threads_basic,threads_content_publish,threads_read_replies,threads_manage_replies",
   tiktok: "user.info.basic,video.publish",
+  tiktokBiz: "user.info.basic,user.info.username,video.list,comment.list,comment.list.manage",
 };
 
 // state OAuth (anti-CSRF), sah 10 minit
@@ -65,6 +67,8 @@ export function authorizeUrl(platform) {
       return `https://threads.net/oauth/authorize?${q({ client_id: id, scope: SCOPES.threads, ...common })}`;
     case "tiktok":
       return `https://www.tiktok.com/v2/auth/authorize/?${q({ client_key: id, scope: SCOPES.tiktok, ...common })}`;
+    case "tiktokBiz":
+      return `https://www.tiktok.com/v2/auth/authorize/?${q({ client_key: id, scope: SCOPES.tiktokBiz, disable_auto_auth: "1", ...common })}`;
   }
   throw new Error("Platform tidak menyokong OAuth");
 }
@@ -124,6 +128,32 @@ export async function handleCallback(platform, { code, state, error, error_descr
     setAccount("tiktok", tiktokTokenData(t, username));
     return username || "TikTok";
   }
+
+  if (platform === "tiktokBiz") {
+    const t = await bizToken({ client_id: id, client_secret: secret, grant_type: "authorization_code", auth_code: code, redirect_uri }, "oauth2/token");
+    const scope = String(t.scope || "");
+    if (scope && !/comment\.list\.manage/.test(scope)) throw new Error("Kebenaran urus komen tidak diberi. Log masuk semula dan benarkan semua akses.");
+    setAccount("tiktokBiz", t);
+    return "TikTok Bisnes (komen)";
+  }
+}
+
+async function bizToken(body, path) {
+  const res = await fetch(`https://business-api.tiktok.com/open_api/v1.3/tt_user/${path}/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const j = await res.json().catch(() => ({}));
+  if (j.code !== 0 || !j.data?.access_token) throw new Error(`TikTok: ${j.message || res.statusText}`);
+  const d = j.data;
+  return {
+    accessToken: d.access_token,
+    refreshToken: d.refresh_token,
+    openId: d.open_id,
+    scope: d.scope,
+    expiresAt: Date.now() + (d.expires_in ?? 86400) * 1000,
+  };
 }
 
 function tiktokTokenData(t, username) {
@@ -155,6 +185,16 @@ export async function refreshTokens() {
       log("info", `Token ${p} diperbaharui`);
     } catch (e) {
       log("error", `Gagal perbaharui token ${p}: ${e.message} — sila log masuk semula`);
+    }
+  }
+  const b = account("tiktokBiz");
+  if (b?.refreshToken && b.expiresAt - now < 2 * 3_600_000 && oauthReady("tiktokBiz")) {
+    try {
+      const { id, secret } = APPS.tiktokBiz();
+      const r = await bizToken({ client_id: id, client_secret: secret, grant_type: "refresh_token", refresh_token: b.refreshToken }, "oauth2/refresh_token");
+      setAccount("tiktokBiz", { ...r, refreshToken: r.refreshToken || b.refreshToken });
+    } catch (e) {
+      log("error", `Gagal perbaharui token TikTok Bisnes: ${e.message} — sila log masuk semula`);
     }
   }
   const t = account("tiktok");

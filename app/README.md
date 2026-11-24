@@ -32,7 +32,7 @@ Untuk OAuth, webhook dan supaya Instagram/Threads/TikTok boleh ambil media, app 
 |-----------|--------------|:----:|:-----------:|:--------:|
 | Instagram | Butang **Log masuk dengan Instagram** (OAuth) | ✅ gambar / Reels | ✅ | ✅ |
 | Threads   | Butang **Log masuk dengan Threads** (OAuth) | ✅ | ✅ | ❌ tiada API DM |
-| TikTok    | Butang **Log masuk dengan TikTok** (OAuth) | ✅ video / foto | ❌ | ❌ |
+| TikTok    | Butang **Log masuk dengan TikTok** (OAuth) | ✅ video / foto | ✅ beta (TikTok API for Business) | ❌ (lihat nota) |
 | WhatsApp  | **Peranti dipautkan**: imbas QR atau kod pautan | ❌ | – | ✅ |
 | Telegram  | Tampal token bot dari @BotFather | ✅ ke channel | ✅ | ✅ |
 
@@ -74,6 +74,18 @@ https://DOMAIN/oauth/tiktok/callback
 - Sebelum app diaudit TikTok, post hanya boleh peribadi (`TIKTOK_PRIVACY_LEVEL=SELF_ONLY`).
 
 Semasa app Meta dan TikTok masih dalam mod *Development*, hanya akaun yang didaftarkan sebagai tester boleh log masuk. Untuk akaun anda sendiri, cara ini sudah memadai.
+
+**TikTok: balas komen (beta)**: app berasingan di **business-api.tiktok.com** (TikTok API for Business).
+- Mohon kebenaran **TikTok Accounts** (Business User, Business Media, Business Comment) dan isi borang akses Accounts API. TikTok akan menyemak permohonan anda.
+- Redirect URI: `https://DOMAIN/oauth/tiktokBiz/callback`.
+- Salin App ID/Secret → `TIKTOK_BIZ_APP_ID`, `TIKTOK_BIZ_APP_SECRET`.
+- Akaun TikTok mesti **Business Account**. Komen disemak setiap N minit (10 video terkini, 30 komen terbaru setiap video). Balasan dihadkan kepada 150 aksara.
+- Endpoint ini dibina mengikut dokumentasi awam TikTok tetapi belum diuji dengan akaun sebenar. Jika ada ralat, mesejnya akan dipaparkan dalam log aktiviti.
+
+**Nota DM TikTok & Threads:**
+- TikTok ada *Business Messaging API* (beta tertutup). Ia memerlukan Verified Business Account, semakan TikTok, dan hanya dibuka untuk rantau tertentu. Belum disokong dalam app ini.
+- Threads langsung tiada API untuk DM.
+- Untuk kedua-duanya, AI akan balas komen dan mengajak pelanggan DM di WhatsApp/Instagram (jika maklumat itu ada dalam Tetapan).
 
 **Claude AI**: dapatkan API key di console.anthropic.com → `ANTHROPIC_API_KEY`.
 

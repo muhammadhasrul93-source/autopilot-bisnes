@@ -284,7 +284,7 @@ $("#btnSim").onclick = (e) => busy(e.target, async () => {
 const HELP = {
   instagram: "Akaun Instagram mesti jenis Business atau Creator.",
   threads: "Log masuk dengan akaun Threads/Instagram anda.",
-  tiktok: "Selepas log masuk, post akan masuk sebagai peribadi sehingga app diluluskan TikTok.",
+  tiktok: "Untuk post video. Post akan masuk sebagai peribadi sehingga app diluluskan TikTok.",
 };
 let waTimer = null;
 async function loadAccounts() {
@@ -308,6 +308,14 @@ async function loadAccounts() {
            <div class="row" style="margin-top:10px"><button class="btn pri" id="tgSave">Sambung Telegram</button></div>`;
     } else {
       body = `<div id="waBox"></div>`;
+    }
+    if (k === "tiktok") {
+      body = `<p class="muted" style="margin:12px 0 4px"><b>1. Post video</b></p>` + body +
+        `<p class="muted" style="margin:16px 0 4px"><b>2. Balas komen</b> <span class="pill">beta</span> ${p.commentsConnected ? '<span class="pill ok">Disambung</span>' : ""}</p>` +
+        (p.commentsConnected
+          ? `<div class="row"><button class="btn" data-oauth="tiktokBiz">🔁 Log masuk semula</button><button class="btn" data-disc="tiktokBiz">Putuskan</button></div>`
+          : `<p class="muted">Guna TikTok API for Business. Akaun mesti TikTok Business.</p><button class="btn pri" data-oauth="tiktokBiz" ${p.commentsOauthReady ? "" : "disabled"}>Log masuk TikTok untuk balas komen</button>
+             ${p.commentsOauthReady ? "" : '<p class="pill err" style="margin-top:8px">TIKTOK_BIZ_APP_ID/SECRET belum diset dalam .env</p>'}`);
     }
     return `<div class="card acct">${head}${body}</div>`;
   }).join("");

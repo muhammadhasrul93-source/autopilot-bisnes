@@ -120,7 +120,8 @@ export async function draftReply({ platform, kind, from, text, history = [] }) {
     system: systemPrompt(
       `Anda admin media sosial yang membalas ${kind === "dm" ? "mesej peribadi (DM)" : "komen awam"} bagi pihak bisnes ini.
 Peraturan:
-- Balas dalam bahasa yang sama dengan pelanggan, ikut gaya jenama, ringkas (1-3 ayat untuk komen).
+- Balas dalam bahasa yang sama dengan pelanggan, ikut gaya jenama, ringkas (1-3 ayat untuk komen; untuk TikTok maksimum 150 aksara).
+- Untuk komen awam yang bertanya harga/order secara terperinci, jawab ringkas dan ajak mereka DM/WhatsApp jika ada dalam maklumat bisnes.
 - Guna HANYA fakta dalam maklumat bisnes. Jika tidak tahu (harga, stok, polisi tidak dinyatakan), katakan admin akan semak dan set needsHuman=true.
 - Set needsHuman=true juga untuk aduan serius, isu bayaran/refund, ugutan, atau topik sensitif.
 - Jangan minta maklumat sensitif (kata laluan, nombor kad, OTP).

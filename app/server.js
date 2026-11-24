@@ -71,8 +71,9 @@ const resultPage = (ok, msg) => `<!doctype html><meta charset="utf-8"><meta name
 app.get("/oauth/:platform/callback", async (req, res) => {
   try {
     const who = await handleCallback(req.params.platform, req.query);
-    log("info", `${PLATFORMS[req.params.platform]?.name} disambung (${who})`);
-    res.send(resultPage(true, `${PLATFORMS[req.params.platform].name}: ${who}`));
+    const name = PLATFORMS[req.params.platform]?.name || "TikTok";
+    log("info", `${name} disambung (${who})`);
+    res.send(resultPage(true, `${name}: ${who}`));
   } catch (e) {
     log("error", `OAuth ${req.params.platform}: ${e.message}`);
     res.status(400).send(resultPage(false, e.message));
@@ -115,6 +116,7 @@ app.get("/api/status", (req, res) => {
           canDM: p.canDM,
           connect: p.oauth ? "oauth" : p.device ? "device" : "token",
           oauthReady: p.oauth ? oauthReady(k) : undefined,
+          ...(k === "tiktok" ? { commentsConnected: p.commentsConnected(), commentsOauthReady: oauthReady("tiktokBiz") } : {}),
         },
       ])
     ),
