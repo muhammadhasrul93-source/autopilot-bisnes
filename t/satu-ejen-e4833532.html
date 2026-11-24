@@ -48,5 +48,6 @@ fbq('init','2749301935525051');fbq('track','PageView');
 (function(){var p=new URLSearchParams(location.search),sid=p.get('session_id');if(!sid||sid.indexOf('{')>-1||!window.fbq)return;var k='cy_purchase_'+sid;try{if(localStorage.getItem(k))return;localStorage.setItem(k,'1');}catch(e){}
 fbq('track','Purchase',{value:29.9,currency:'MYR',content_name:'AI untuk Ejen Hartanah, Insurans & Unit Trust',content_type:'product',num_items:1},{eventID:sid});})();
 </script>
+<script>(function(){var sid=new URLSearchParams(location.search).get("session_id");if(!sid||sid.indexOf("{")>-1)return;try{if(localStorage.getItem("cy_ping_"+sid))return;localStorage.setItem("cy_ping_"+sid,"1")}catch(e){}fetch("https://script.google.com/macros/s/AKfycbzXQgnuUohbecjquN1xQT41p2iw4fsJoGzejrpEJv2HP__veDF188mTLFRT3jHlPcegaA/exec",{method:"POST",mode:"no-cors",body:new URLSearchParams({t:"beli",k:"satu-ejen",sid:sid})}).catch(function(){});})();</script>
 </body>
 </html>

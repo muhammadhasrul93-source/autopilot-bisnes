@@ -63,7 +63,7 @@
     function show() {
       if (shown >= MAX_TOASTS || ss('cy_sp_off')) return;
       var r = list[i % list.length]; i++; shown++;
-      tx.innerHTML = '<b></b> baru beli <b>2 Ebook Coach Yoi</b><small><span></span> · <i>✓ pembelian sah</i></small>';
+      tx.innerHTML = '<b></b> baru beli <b>Ebook Coach Yoi</b><small><span></span> · <i>✓ pembelian sah</i></small>';
       tx.querySelector('b').textContent = r.n;
       tx.querySelector('small span').textContent = ago(r.t);
       el.classList.add('on');
