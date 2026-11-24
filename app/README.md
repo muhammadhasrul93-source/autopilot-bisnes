@@ -41,6 +41,8 @@ cp .env.example .env     # isi ANTHROPIC_API_KEY, PUBLIC_URL, ADMIN_PASSWORD & A
 npm start                # http://localhost:3000  (login: admin / ADMIN_PASSWORD)
 ```
 
+**Link awam `https://app.coachyoi.com` melalui Cloudflare Tunnel: lihat [deploy/CLOUDFLARE.md](deploy/CLOUDFLARE.md)** (komputer sendiri atau VPS dengan Docker).
+
 Untuk OAuth, webhook dan supaya Instagram/Threads/TikTok boleh ambil media, app mesti dihoskan pada **URL HTTPS awam**, contohnya VPS dengan Caddy/Nginx, Railway, Render atau Fly.io. Set `PUBLIC_URL` kepada URL tersebut. Folder `data/` (pangkalan data, token & sesi WhatsApp) dan `public/uploads/` mesti kekal antara restart, jadi guna disk/volume kekal. App ini perlu berjalan 24 jam supaya WhatsApp kekal disambung.
 
 > ⚠️ Repo ini juga dihoskan oleh GitHub Pages (salepage). GitHub Pages **tidak boleh** menjalankan app ini, kerana ia hanya menghidang fail statik. Hoskan folder `app/` di server Node.js berasingan. Jangan sekali-kali commit fail `.env` atau folder `data/`.

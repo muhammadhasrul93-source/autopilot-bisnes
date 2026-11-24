@@ -15,6 +15,11 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_URL = (process.env.PUBLIC_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+// Keselamatan: app yang boleh dicapai dari internet MESTI ada kata laluan
+if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(PUBLIC_URL) && (!ADMIN_PASSWORD || ADMIN_PASSWORD.length < 8 || ADMIN_PASSWORD === "tukar-kata-laluan-ini")) {
+  console.error("RALAT: PUBLIC_URL ialah URL awam tetapi ADMIN_PASSWORD tidak diset / terlalu lemah (min 8 aksara). Set dalam .env.");
+  process.exit(1);
+}
 // Rahsia webhook Telegram diterbitkan dari token bot (stabil merentas restart)
 const tgSecret = () =>
   crypto.createHash("sha256").update(`tg:${PLATFORMS.telegram.token() || ""}`).digest("hex").slice(0, 32);

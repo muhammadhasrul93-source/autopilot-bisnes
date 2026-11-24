@@ -1,0 +1,19 @@
+# Jalankan di VPS:  docker compose -f deploy/docker-compose.yml up -d --build
+# Perlu fail ../.env (salin dari .env.example) dengan TUNNEL_TOKEN dari Cloudflare.
+services:
+  app:
+    build: ..
+    restart: unless-stopped
+    env_file: ../.env
+    volumes:
+      - ../data:/app/data
+      - ../public/uploads:/app/public/uploads
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    env_file: ../.env
+    depends_on:
+      - app
