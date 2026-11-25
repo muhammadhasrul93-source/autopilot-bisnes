@@ -1,0 +1,85 @@
+{
+ "videos": {
+  "vscode": {
+   "file": "v/vscode-cd67ea.mp4",
+   "poster": "v/vscode-cd67ea.jpg",
+   "title": "Setup VS Code + Claude Code",
+   "dur": 84
+  },
+  "autopilot": {
+   "file": "v/autopilot-a0f4df.mp4",
+   "poster": "v/autopilot-a0f4df.jpg",
+   "title": "Autopilot Bisnes: sehari dengan pasukan AI",
+   "dur": 89
+  },
+  "website": {
+   "file": "v/website-b05dd8.mp4",
+   "poster": "v/website-b05dd8.jpg",
+   "title": "Bina Website Jualan dengan AI",
+   "dur": 92
+  },
+  "whatsapp": {
+   "file": "v/whatsapp-8346b0.mp4",
+   "poster": "v/whatsapp-8346b0.jpg",
+   "title": "Follow-up WhatsApp dengan AI",
+   "dur": 93
+  },
+  "pejabat": {
+   "file": "v/pejabat-494c78.mp4",
+   "poster": "v/pejabat-494c78.jpg",
+   "title": "AI untuk Kerja Pejabat SME",
+   "dur": 89
+  },
+  "ejen": {
+   "file": "v/ejen-7b1dea.mp4",
+   "poster": "v/ejen-7b1dea.jpg",
+   "title": "AI untuk Ejen",
+   "dur": 90
+  },
+  "adb": {
+   "file": "v/adb-884790.mp4",
+   "poster": "v/adb-884790.jpg",
+   "title": "Autopilot TikTok guna adb (tutorial penuh)",
+   "dur": 189
+  },
+  "videovoice": {
+   "file": "v/videovoice-38f46d.mp4",
+   "poster": "v/videovoice-38f46d.jpg",
+   "title": "Video promo tanpa kamera",
+   "dur": 90
+  },
+  "edit": {
+   "file": "v/edit-0c09c9.mp4",
+   "poster": "v/edit-0c09c9.jpg",
+   "title": "Edit video guna Claude (tutorial penuh)",
+   "dur": 140
+  }
+ },
+ "book2v": {
+  "autopilot": [
+   "autopilot"
+  ],
+  "vscode": [
+   "vscode"
+  ],
+  "website": [
+   "website"
+  ],
+  "whatsapp": [
+   "whatsapp"
+  ],
+  "pejabat": [
+   "pejabat"
+  ],
+  "ejen": [
+   "ejen"
+  ],
+  "tiktok": [
+   "adb"
+  ],
+  "video": [
+   "videovoice",
+   "edit"
+  ]
+ }
+}
