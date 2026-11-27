@@ -339,8 +339,8 @@ fbq('init','2749301935525051');fbq('track','PageView');
   </div>
   <div class="vidcol">
    <div class="vidbox">
-    <video id="vsl" playsinline preload="metadata" poster="assets/poster.jpg"><source src="assets/promo.mp4" type="video/mp4"></video>
-    <button class="play" id="playbtn" aria-label="Main video"><i>▶</i>Tonton 49 saat dengan bunyi 🔊</button>
+    <video id="vsl" playsinline preload="metadata" poster="assets/poster-n3.jpg"><source src="assets/promo-n3.mp4" type="video/mp4"></video>
+    <button class="play" id="playbtn" aria-label="Main video"><i>▶</i>Tonton kisah saya (1:49) dengan bunyi 🔊</button>
    </div>
   </div>
  </div>
@@ -710,7 +710,7 @@ var LINKS = {basic: STRIPE_URL, senior: "https://buy.stripe.com/bJedR81Eq23bb3g1
   // video
   var v = document.getElementById('vsl'), b = document.getElementById('playbtn');
   b.addEventListener('click', function(){ v.muted = false; v.controls = true; v.play(); b.style.display = 'none'; });
-  v.addEventListener('ended', function(){ var h = document.getElementById('harga'); if (h) h.scrollIntoView({behavior:'smooth'}); });
+  v.addEventListener('ended', function(){ var h = document.getElementById('pakej'); if (h) h.scrollIntoView({behavior:'smooth'}); });
   // calculator
   var hrs = document.getElementById('hrs'), rate = document.getElementById('rate');
   function fmt(n){ return n.toLocaleString('en-MY'); }
