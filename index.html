@@ -303,6 +303,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 120px;font-size:12.5px;co
 @media (max-width:820px){.anglebar{display:block;padding:0 18px;font:800 22px/1.2 "Plus Jakarta Sans",sans-serif;color:#fff;text-align:center;margin:0 0 14px;position:relative}.anglebar .strike{color:var(--mut);text-decoration:line-through;text-decoration-color:var(--red)}}
 .tiers.two{grid-template-columns:repeat(2,1fr)}#pakej{scroll-margin-top:24px}
 @media(max-width:900px){.tiers.two{grid-template-columns:1fr;max-width:460px;margin-left:auto;margin-right:auto}.cvs{flex-wrap:wrap;row-gap:6px}}
+.tk{display:flex;flex-direction:column;gap:10px;max-width:520px;margin:6px auto 0;text-align:left}.tk label{display:flex;gap:14px;align-items:center;background:#211e1c;border:1px solid #3a352f;border-radius:14px;padding:14px 18px;font:700 19px "Plus Jakarta Sans",sans-serif;color:#fff;cursor:pointer}.tk input{width:24px;height:24px;accent-color:#E58A68}
 </style>
 <!-- Meta Pixel: Coach Yoi Ebook -->
 <script>
@@ -349,21 +350,23 @@ fbq('init','2749301935525051');fbq('track','PageView');
 <section class="quizsec">
  <div class="wrap">
   <div class="quiz">
-   <span class="kick">Cuba jawab dalam hati</span>
-   <div class="qcard">Sebut je <span class="o">"air berkarbonat"</span>.<br>Jenama apa terus muncul dalam kepala?</div>
-   <p class="q2">Laju, kan? Sekarang soalan kedua… <b style="color:#fff">jenama nombor 5?</b></p>
-   <button type="button" id="quizBtn">🤔 Tunjuk jawapan</button>
-   <div class="ans" id="quizAns">
-    <p>Ramai mula garu kepala. Bukan sebab jenama pertama tu paling sedap. Sebab ia yang <b style="color:#fff">paling kerap kita nampak</b>.</p>
-    <p>Ahli psikologi panggil ni <b style="color:#FFD400">"mere exposure effect"</b>: lebih kerap kita nampak sesuatu, lebih kita suka dan percaya.</p>
-    <p class="src">📚 Robert Zajonc (1968), Journal of Personality and Social Psychology</p>
-    <p style="margin-top:14px">Pelanggan anda pun sama. Mereka selalunya beli dari bisnes yang <b style="color:#fff">paling kerap mereka nampak</b>, dan yang <b style="color:#fff">paling cepat balas</b>.</p>
-    <p><b style="color:#E8896A">Soalnya: anda sempat ke buat semua tu seorang diri, setiap hari?</b></p>
+   <span class="kick">Semak diri 10 saat</span>
+   <div class="qcard">Owner bisnes, <span class="o">tick yang awak buat sorang</span></div>
+   <div class="tk" id="tk">
+    <label><input type="checkbox"> Edit video sendiri</label>
+    <label><input type="checkbox"> Tulis caption setiap hari</label>
+    <label><input type="checkbox"> Balas DM sampai malam</label>
+    <label><input type="checkbox"> Semak iklan sendiri</label>
+    <label><input type="checkbox"> Follow-up lead sendiri</label>
    </div>
+   <div class="ans on" id="tkAns"><p style="text-align:center;color:#CFC7BB">Tick yang betul-betul awak buat 👆</p></div>
   </div>
  </div>
 </section>
-<script>document.getElementById('quizBtn').onclick=function(){document.getElementById('quizAns').classList.add('on');this.style.display='none';};</script>
+<script>(function(){var box=document.getElementById('tk'),ans=document.getElementById('tkAns');box.addEventListener('change',function(){var n=box.querySelectorAll('input:checked').length,h;
+if(n>=3)h='<p style="text-align:center"><b style="color:#FFD400;font-size:22px">'+n+' tick. Awak bukan malas, awak cuma takde sistem.</b></p><p style="text-align:center;color:#CFC7BB">Kerja berulang ni semua boleh diserahkan pada "pasukan AI". Scroll bawah, saya tunjuk sistem yang saya guna setiap hari.</p>';
+else if(n>0)h='<p style="text-align:center;color:#CFC7BB">'+n+' tick. Bila bisnes makin besar, senarai ni makin panjang. Lebih baik ada sistem dari awal.</p>';
+else h='<p style="text-align:center;color:#CFC7BB">Tick yang betul-betul awak buat 👆</p>';ans.innerHTML=h;});})();</script>
 
 <section class="pain">
  <div class="wrap">
