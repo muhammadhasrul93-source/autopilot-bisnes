@@ -757,5 +757,13 @@ fetch('assets/testimoni.json',{cache:'no-cache'}).then(function(r){return r.json
 </script>
 <script src="assets/social-proof.js" defer></script>
 <script>document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[href*="wa.me"]');if(a&&window.fbq)fbq('track','Contact',{content_name:a.dataset.wa||'whatsapp'});},true);</script>
+<script>
+document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[href="#pakej"]');if(!a)return;e.preventDefault();
+var t=document.getElementById('pakej');if(!t)return;
+document.querySelectorAll('img[loading="lazy"]').forEach(function(i){i.loading='eager';});
+function go(b){t.scrollIntoView({behavior:b,block:'start'});}
+go('smooth');setTimeout(function(){go('smooth');},700);setTimeout(function(){go('auto');},1500);
+try{history.replaceState(null,'','#pakej');}catch(_){}},true);
+</script>
 </body>
 </html>
