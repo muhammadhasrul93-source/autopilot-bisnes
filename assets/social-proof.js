@@ -23,15 +23,15 @@
   function css() {
     var s = document.createElement('style');
     s.textContent =
-      '.cy-sp{position:fixed;left:14px;bottom:92px;z-index:60;max-width:330px;display:flex;gap:12px;align-items:center;' +
+      '.cy-sp{position:fixed;left:50%;margin-left:-165px;top:calc(12px + env(safe-area-inset-top));z-index:60;width:330px;max-width:330px;box-sizing:border-box;display:flex;gap:12px;align-items:center;' +
       'background:#fff;color:#1d1b19;border-radius:14px;padding:12px 34px 12px 12px;box-shadow:0 14px 40px rgba(0,0,0,.45);' +
-      'font:500 13.5px/1.35 "Plus Jakarta Sans",system-ui,sans-serif;transform:translateY(20px);opacity:0;pointer-events:none;transition:all .35s}' +
+      'font:500 13.5px/1.35 "Plus Jakarta Sans",system-ui,sans-serif;transform:translateY(-20px);opacity:0;pointer-events:none;transition:all .35s}' +
       '.cy-sp.on{transform:none;opacity:1;pointer-events:auto}' +
       '.cy-sp .ic{flex:none;width:40px;height:40px;border-radius:10px;background:#D97757;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px}' +
       '.cy-sp b{color:#000}.cy-sp small{display:block;color:#6f6a63;font-size:12px;margin-top:2px}.cy-sp small i{font-style:normal;color:#1E8E5A;font-weight:700}' +
       '.cy-sp .x{position:absolute;top:6px;right:8px;border:0;background:none;color:#8a847b;font-size:16px;cursor:pointer;padding:4px;line-height:1}' +
       '.cy-count{display:inline-block;margin:10px 0 0;font-weight:700;font-size:14px;color:#C15F3C}' +
-      '@media(max-width:480px){.cy-sp{left:10px;right:10px;max-width:none;bottom:86px}}';
+      '@media(max-width:480px){.cy-sp{left:10px;right:10px;margin-left:0;width:auto;max-width:none}}';
     document.head.appendChild(s);
   }
 
