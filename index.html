@@ -329,7 +329,12 @@ fbq('init','2749301935525051');fbq('track','PageView');
     sorang:'Admin, designer, marketer, CS&hellip; <span class="strike">semua sorang?</span><br>Bagi kerja ulang-ulang tu kat <span class="o">AI</span>.',
     lead:'Lead masuk malam, reply esok pagi?<br><span class="o">AI</span> siapkan follow-up setiap pagi.',
     content:'Seminggu tak post, sale terus senyap?<br><span class="o">AI</span> tulis &amp; susun jadual content korang.',
-    bab1:'Dah baca Bab 1?<br>Sistem penuh ada dalam <span class="o">12 bab seterusnya</span>.'};
+    bab1:'Dah baca Bab 1?<br>Sistem penuh ada dalam <span class="o">12 bab seterusnya</span>.',
+    '360':'<span class="o">360 Content</span> Dipost Dalam Masa 1 Bulan,<br>Zero Staff, Saya Cuma Shoot'};
+    /* Uji 50/50 hero (29 Nov 2026): pelawat tanpa ?a= dapat 'lama' atau '360', disimpan supaya kekal sama */
+    if(!a){try{a=localStorage.getItem('cyHero')||'';if(!a){a=Math.random()<.5?'lama':'360';localStorage.setItem('cyHero',a);}}catch(e){a=Math.random()<.5?'lama':'360';}
+      try{fbq('trackCustom','HeroVariant',{variant:a});}catch(e){}}
+    if(a==='360'){var sh=document.querySelector('.hero .subh');if(sh){sh.innerHTML='AI <mark>edit video, tulis caption &amp; post</mark> ke Facebook, Instagram &amp; Threads. 12 post sehari, saya cuma shoot video. Ni Planner FB saya 👇';var im=document.createElement('img');im.src='assets/proof/planner-360.jpg';im.alt='Planner Facebook Coach Yoi: post yang dijadualkan oleh AI';im.loading='eager';im.style.cssText='display:block;width:100%;max-width:520px;max-height:300px;object-fit:cover;object-position:top;border-radius:14px;border:2px solid rgba(255,255,255,.18);margin:6px 0 18px';sh.parentNode.insertBefore(im,sh.nextSibling);}}
     if(H[a]){document.getElementById('heroH').innerHTML=H[a];var g=document.querySelector('.hero .grid'),b=document.createElement('div');b.className='anglebar';b.innerHTML=H[a].replace('<br>',' ');g.parentNode.insertBefore(b,g);}})();</script>
    <p class="sub">Ebook <b>"Autopilot Bisnes dengan Claude AI"</b> tunjuk step by step, untuk <b>Windows &amp; MacBook</b>, cara bina "pasukan AI" yang tulis content, post ke TikTok, kawal handphone Android, baca data iklan dan follow-up lead untuk korang.</p>
    <div class="pills"><span>📄 62 muka surat</span><span>🖼️ Gambar step by step</span><span>✂️ Prompt siap salin</span><span>🇲🇾 Bahasa Melayu</span><span style="border-color:var(--o);color:#F3B39B">🎁 BONUS ebook ke-2 (48 muka surat)</span></div>
