@@ -48,6 +48,7 @@ section{padding:72px 0}
 .pills{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 22px}
 .pills span{border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:99px;padding:5px 12px;font-size:13px;font-weight:600}
 .getbox{background:rgba(255,255,255,.05);border:1px solid rgba(255,212,0,.35);border-radius:16px;padding:16px 18px;margin:4px 0 18px;max-width:600px}.getbox .gt{display:block;color:#FFD400;font-size:18px;margin-bottom:8px}.getbox ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px 16px}.getbox li{font-size:15px;line-height:1.4;color:#EDE6DC;padding-left:24px;position:relative}.getbox li::before{content:"✅";position:absolute;left:0;top:0;font-size:14px}.getbox .gp{font-size:14px;color:#F3B39B;margin:10px 0 0}@media (max-width:820px){.getbox ul{grid-template-columns:1fr}}
+@media (max-width:820px){.tiers.two .tier:nth-child(2){order:-1}}
 .proof630{margin:0}.proof630 img{display:block;width:100%;border-radius:18px;border:2px solid rgba(255,255,255,.18);box-shadow:0 30px 80px rgba(0,0,0,.55)}.proof630 figcaption{font-size:14px;color:#CFC7BB;text-align:center;margin-top:10px}.proof630.mob{display:none;margin:4px 0 18px}@media (max-width:820px){.proof630.mob{display:block}.hero .vidcol{display:none}}
 .vidbox{position:relative;max-width:360px;margin:0 auto;border-radius:30px;padding:10px;background:#0b0b0c;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px #2c2a27}
 .vidbox video{width:100%;aspect-ratio:9/16;border-radius:22px;background:#000;object-fit:cover}
@@ -311,6 +312,13 @@ footer{border-top:1px solid var(--line);padding:30px 0 120px;font-size:12.5px;co
 <script>
 !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
 fbq('init','2749301935525051');fbq('track','PageView');
+fbq('track','ViewContent',{content_name:'Salepage Ebook Coach Yoi',content_category:'ebook'});
+/* Ukur conversion salepage (29 Nov 2026): scroll depth, nampak harga, klik CTA */
+(function(){var sent={};function ev(n,p){if(sent[n])return;sent[n]=1;try{fbq('trackCustom',n,p||{});}catch(e){}}
+window.addEventListener('scroll',function(){var h=document.documentElement,d=(h.scrollTop+innerHeight)/h.scrollHeight*100;[25,50,75,90].forEach(function(x){if(d>=x)ev('Scroll'+x,{depth:x});});},{passive:true});
+document.addEventListener('DOMContentLoaded',function(){var p=document.getElementById('pakej');if(p&&'IntersectionObserver' in window){new IntersectionObserver(function(es,o){es.forEach(function(e){if(e.isIntersecting){ev('ViewPricing');o.disconnect();}});},{threshold:.3}).observe(p);}
+document.querySelectorAll('[data-cta]').forEach(function(a,i){a.addEventListener('click',function(){try{fbq('trackCustom','ClickCTA',{pos:i,text:(a.innerText||'').slice(0,40)});}catch(e){}});});
+setTimeout(function(){ev('Engaged30s');},30000);});})();
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2749301935525051&ev=PageView&noscript=1"/></noscript>
 </head>
@@ -349,7 +357,7 @@ fbq('init','2749301935525051');fbq('track','PageView');
    <p class="sub">Ebook <b>"Autopilot Bisnes dengan Claude AI"</b> tunjuk step by step, untuk <b>Windows &amp; MacBook</b>, cara bina <b>Yoi Auto Crew</b>, staff AI yang tulis content, post ke TikTok, kawal handphone Android, baca data iklan dan follow-up lead untuk korang.</p>
    <div class="pills"><span>📄 65 muka surat</span><span>🖼️ Gambar step by step</span><span>✂️ Prompt siap salin</span><span>🇲🇾 Bahasa Melayu</span><span style="border-color:var(--o);color:#F3B39B">🎁 BONUS ebook ke-2 (48 muka surat)</span></div>
    <div class="ctawrap">
-    <a class="cta" data-cta href="#harga">Nak! Tengok pakej • dari RM39</a>
+    <a class="cta" data-cta href="#harga">Nak! Dapatkan pakej lengkap • RM69</a>
     <div class="trust"><span>Bayaran selamat Stripe</span><span>Akses serta-merta</span><span>Jaminan 7 hari</span></div>
     <div class="pay" aria-label="Kaedah bayaran"><span class="fpx">FPX</span><span>Online Banking</span><span>Google Pay</span><span>Apple Pay</span><span>VISA</span><span>Mastercard</span></div>
    </div>
@@ -432,25 +440,7 @@ else h='<p style="text-align:center;color:#CFC7BB">Tick yang korang memang buat 
  </div>
 </section>
 
-<section class="punca" id="punca">
- <style>
- .punca{background:var(--ink2);border-top:1px solid var(--line)}
- .punca .card .n{font:800 12px "Plus Jakarta Sans";letter-spacing:.14em;color:var(--o);margin-bottom:8px}
- .bridge{margin-top:28px;max-width:760px;border-left:3px solid var(--o);padding:6px 0 6px 18px;font-size:17px;color:var(--tx)}
- .bridge b{color:#fff}
- </style>
- <div class="wrap">
-  <span class="kick">Kenapa jadi macam ni</span>
-  <h2>Bukan sebab korang malas.<br>Masalahnya, <span class="hl">semua benda kena buat sorang</span>.</h2>
-  <p style="color:#CFC7BB;max-width:720px">Nak post, korang. Nak reply customer, korang. Nak tengok iklan pun korang. Sehari je sibuk, terus semua tergendala.</p>
-  <div class="cards reveal">
-   <div class="card"><div class="n">PUNCA 1</div><h3>Benda sama, ulang hari-hari</h3><p>Fikir idea, tulis caption, edit video, upload satu-satu app. Esok? Ulang balik dari kosong.</p></div>
-   <div class="card"><div class="n">PUNCA 2</div><h3>Rajin bila ada mood je</h3><p>Minggu ni semangat, post hari-hari. Minggu depan penat, terus senyap. Algoritma tak tunggu, customer pun tak tunggu.</p></div>
-   <div class="card"><div class="n">PUNCA 3</div><h3>Korang jadi "orang tengah" semua app</h3><p>CapCut, Meta, WhatsApp, Google Sheets. Semua tunggu korang tekan dulu, baru jalan.</p></div>
-  </div>
-  <p class="bridge reveal">Jadi jawapannya bukan kerja lagi kuat. Jawapannya, <b>bagi kerja yang ulang-ulang tu kat AI</b>. Dia ikut arahan korang hari-hari, macam ada staf sendiri. Ni contoh dalam bisnes saya 👇</p>
- </div>
-</section>
+
 
 <section class="day" id="sehari">
  <style>
@@ -525,22 +515,6 @@ else h='<p style="text-align:center;color:#CFC7BB">Tick yang korang memang buat 
 
   <div class="pf reveal">
    <div>
-    <span class="tag">🎮 Game dalam Claude artifact</span>
-    <h3>2 game penuh, siap dengan "bersembang" dengan Claude</h3>
-    <p><b>Palmageddon</b> (game 3D survival di pulau zombi) dan <b>Pasar Malam Tycoon</b> (game bisnes gerai). Dua-dua dibina dalam Claude artifact, lepas tu masuk dalam app Riangoka.</p>
-    <p>Kalau AI boleh buat game, bayangkan apa dia boleh buat untuk content dan iklan bisnes korang.</p>
-   </div>
-   <div class="pm stack">
-    <a class="shot" href="assets/proof/palmageddon_play.jpg" target="_blank"><div class="bar"><i></i><i></i><i></i><span>Palmageddon • Claude artifact</span></div><img src="assets/proof/palmageddon.jpg" alt="Game Palmageddon" loading="lazy"></a>
-    <div class="duo2">
-     <a class="shot" href="assets/proof/palmageddon_play.jpg" target="_blank"><img src="assets/proof/palmageddon_play.jpg" alt="Gameplay Palmageddon" loading="lazy"></a>
-     <a class="shot" href="assets/proof/pasarmalam.jpg" target="_blank"><img src="assets/proof/pasarmalam.jpg" alt="Game Pasar Malam Tycoon" loading="lazy" style="aspect-ratio:900/526;object-fit:cover;object-position:top"></a>
-    </div>
-   </div>
-  </div>
-
-  <div class="pf reveal">
-   <div>
     <span class="tag">📈 TikTok Ads (TTAM) &amp; GMV Max</span>
     <h3>Claude pantau iklan TikTok Shop saya 3 kali sehari</h3>
     <div class="stats">
@@ -606,7 +580,7 @@ else h='<p style="text-align:center;color:#CFC7BB">Tick yang korang memang buat 
   <div class="proofcta reveal">
    <h3>Ebook ni ajar cara yang <span class="o">sama</span>, step by step.</h3>
    <p>Prompt, setting dan cara kerja yang saya guna untuk semua benda kat atas, untuk Windows &amp; MacBook.</p>
-   <a class="cta" data-cta href="#harga">Saya nak sistem ni • dari RM39</a>
+   <a class="cta" data-cta href="#harga">Saya nak sistem ni • pakej lengkap RM69</a>
   </div>
  </div>
 </section>
@@ -671,6 +645,7 @@ else h='<p style="text-align:center;color:#CFC7BB">Tick yang korang memang buat 
    <tr><td>Riset</td><td class="bad" data-l="❌ Cara lama">Tak tahu content apa yang laku</td><td class="good" data-l="✅ Dengan Yoi Auto Crew">AI riset pesaing &amp; cari idea viral untuk korang</td></tr>
    <tr><td>Masa korang</td><td class="bad" data-l="❌ Cara lama">Habis kat kerja admin</td><td class="good" data-l="✅ Dengan Yoi Auto Crew">Fokus pada closing &amp; strategi. Yoi Auto Crew buat yang lain</td></tr>
   </table>
+  <div style="text-align:center;margin-top:22px"><a class="cta" data-cta href="#harga">Saya nak Yoi Auto Crew • pakej lengkap RM69</a><div style="font-size:13px;color:#9D968C;margin-top:8px">Bayar sekali • Akses serta-merta • Jaminan 7 hari</div></div>
  </div>
 </section>
 
@@ -790,6 +765,7 @@ else h='<p style="text-align:center;color:#CFC7BB">Tick yang korang memang buat 
   <h2>FAQ</h2>
   <details><summary>Saya tak pandai coding. Boleh ikut?</summary><p>Boleh. Ebook ni memang ditulis untuk orang yang bukan IT. Bab-bab awal langsung takde coding. Untuk automasi lebih advance, korang cuma copy prompt, Claude yang tulis code untuk korang.</p></details>
   <details><summary>Perlu bayar Claude ke?</summary><p>Nak chat biasa, Claude free pun boleh. Nak automasi (Claude Code, Claude in Chrome, scheduled tasks) kena pelan berbayar, start dari <b>Claude Pro (USD20 sebulan)</b> setakat November 2026. Dalam ebook ada terang pelan mana yang sesuai.</p></details>
+  <details><summary>Berapa total kos sebenar?</summary><p><b>Ebook: RM69 sekali bayar</b> (pakej lengkap) atau RM39 (Basic). <b>Claude Pro: ±USD20 sebulan</b> (±RM90, ikut kadar tukaran). Jadi lebih kurang <b>RM160 bulan pertama, lepas tu ±RM90 sebulan</b>. Bandingkan dengan upah video editor + admin posting + pengurus iklan: ±RM3,450 sebulan (anggaran harga freelancer, rujuk bahagian "Kira sendiri" kat atas).</p></details>
   <details><summary>Saya guna Windows / MacBook. Boleh?</summary><p>Boleh. Setiap step setup ada gambar untuk dua-dua.</p></details>
   <details><summary>Saya guna iPhone. Masih berguna?</summary><p>Berguna. Bab 6 je (kawal phone untuk auto post) yang perlu phone Android. Bab lain (content, jadual post, iklan, lead, playbook) tak kisah phone apa.</p></details>
   <details><summary>Apa beza pakej Basic dan Advance?</summary><p><b>Basic RM39</b>: Autopilot Bisnes + Setup VS Code &amp; Claude Code, dengan 2 video tutorial. <b>Advance RM69</b>: semua 8 ebook Siri AI Coach Yoi (termasuk Website Jualan, Chatbot WhatsApp, Kerja Pejabat SME, TikTok Affiliate, Ejen Hartanah/Insurans/Unit Trust, Video &amp; Voice AI), 9 video tutorial dan 5 bonus eksklusif. Dah beli Basic? Upgrade ke Advance, tambah RM30 je.</p></details>
@@ -805,7 +781,7 @@ else h='<p style="text-align:center;color:#CFC7BB">Tick yang korang memang buat 
 <section style="text-align:center;padding-top:20px">
  <div class="wrap">
   <h2>Esok, competitor korang post 3 video lagi.<br><span class="o">Korang?</span></h2>
-  <p style="color:#CFC7BB">Dari RM39. Bayar sekali je. Start malam ni.</p>
+  <p style="color:#CFC7BB">Pakej lengkap RM69 (atau Basic RM39). Bayar sekali je. Start malam ni.</p>
   <a class="cta" data-cta href="#">Jom, saya nak start autopilot ➜</a>
  </div>
 </section>
