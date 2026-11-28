@@ -47,6 +47,7 @@ section{padding:72px 0}
 .hero .sub{font-size:18px;color:#D9D2C7;max-width:560px}
 .pills{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 22px}
 .pills span{border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:99px;padding:5px 12px;font-size:13px;font-weight:600}
+.proof630{margin:0}.proof630 img{display:block;width:100%;border-radius:18px;border:2px solid rgba(255,255,255,.18);box-shadow:0 30px 80px rgba(0,0,0,.55)}.proof630 figcaption{font-size:14px;color:#CFC7BB;text-align:center;margin-top:10px}.proof630.mob{display:none;margin:4px 0 18px}@media (max-width:820px){.proof630.mob{display:block}.hero .vidcol{display:none}}
 .vidbox{position:relative;max-width:360px;margin:0 auto;border-radius:30px;padding:10px;background:#0b0b0c;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px #2c2a27}
 .vidbox video{width:100%;aspect-ratio:9/16;border-radius:22px;background:#000;object-fit:cover}
 .vidbox .play{position:absolute;inset:10px;border-radius:22px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:28px;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.75));cursor:pointer;border:0;color:#fff;font:800 16px "Plus Jakarta Sans"}
@@ -234,7 +235,6 @@ footer{border-top:1px solid var(--line);padding:30px 0 120px;font-size:12.5px;co
   section{padding:56px 0}
   .hero{padding-top:26px}
   .hero .grid,.morning,.who{grid-template-columns:1fr}
-  .hero .vidcol{order:-1}
   .hero::before{width:420px;height:420px;right:-200px;top:-200px}
   .calc .row{grid-template-columns:1fr}
   .calc .out{grid-template-columns:1fr}
@@ -321,20 +321,16 @@ fbq('init','2749301935525051');fbq('track','PageView');
  <div class="wrap grid">
   <div>
    <span class="kick pre">Untuk owner bisnes kecil, affiliate &amp; ejen yang buat semua benda sorang…</span>
-   <h1 id="heroH">Dari <span style="color:#CFC7BB">Post 8 Video Sebulan</span>… Ke <span class="hl2">90 Video Sebulan Tanpa Tambah Staff</span></h1>
-   <p class="subh">Dengan <mark>"pasukan AI"</mark> yang tulis, susun jadual &amp; auto post sendiri. Sistem yang competitor korang dah guna, sekarang dalam Bahasa Melayu, step by step.</p>
+   <h1 id="heroH"><span class="o">630 Content</span> Dalam 1 Bulan,<br>Zero Staff, Saya Cuma Shoot</h1>
+   <p class="subh">AI <mark>edit video, tulis caption &amp; post sendiri</mark>: 12 post sehari ke Facebook, Instagram &amp; Threads + 9 post sehari di 3 akaun TikTok = 21 sehari × 30 hari. Saya cuma shoot video.</p>
+   <figure class="proof630 mob"><img src="assets/proof/proof-630.jpg" alt="Planner Facebook dan 3 akaun TikTok Coach Yoi: post yang dibuat oleh AI" loading="eager"><figcaption>📸 Screenshot sebenar: Planner FB + 3 akaun TikTok saya</figcaption></figure>
    <script>(function(){var a=(new URLSearchParams(location.search).get('a')||'').toLowerCase(),H={
     drop:'Sale makin drop, kos iklan makin naik?<br><span class="o">Bagi AI buat kerja harian.</span>',
     staff:'Belum mampu hire staff?<br>Bina <span class="o">"pasukan AI"</span> dulu.',
     sorang:'Admin, designer, marketer, CS&hellip; <span class="strike">semua sorang?</span><br>Bagi kerja ulang-ulang tu kat <span class="o">AI</span>.',
     lead:'Lead masuk malam, reply esok pagi?<br><span class="o">AI</span> siapkan follow-up setiap pagi.',
     content:'Seminggu tak post, sale terus senyap?<br><span class="o">AI</span> tulis &amp; susun jadual content korang.',
-    bab1:'Dah baca Bab 1?<br>Sistem penuh ada dalam <span class="o">12 bab seterusnya</span>.',
-    '360':'<span class="o">630 Content</span> Dalam 1 Bulan,<br>Zero Staff, Saya Cuma Shoot'};
-    /* Uji 50/50 hero (29 Nov 2026): pelawat tanpa ?a= dapat 'lama' atau '360', disimpan supaya kekal sama */
-    if(!a){try{a=localStorage.getItem('cyHero')||'';if(!a){a=Math.random()<.5?'lama':'360';localStorage.setItem('cyHero',a);}}catch(e){a=Math.random()<.5?'lama':'360';}
-      try{fbq('trackCustom','HeroVariant',{variant:a});}catch(e){}}
-    if(a==='360'){var sh=document.querySelector('.hero .subh');if(sh){sh.innerHTML='AI <mark>edit video, tulis caption &amp; post sendiri</mark>: 12 post sehari ke Facebook, Instagram &amp; Threads + 9 post sehari di 3 akaun TikTok = 21 sehari × 30 hari. Saya cuma shoot video. Ni buktinya 👇';var im=document.createElement('img');im.src='assets/proof/proof-630.jpg';im.alt='Planner Facebook dan 3 akaun TikTok Coach Yoi: post yang dibuat oleh AI';im.loading='eager';im.style.cssText='display:block;width:100%;max-width:520px;border-radius:14px;border:2px solid rgba(255,255,255,.18);margin:6px 0 18px';sh.parentNode.insertBefore(im,sh.nextSibling);}}
+    bab1:'Dah baca Bab 1?<br>Sistem penuh ada dalam <span class="o">12 bab seterusnya</span>.'};
     if(H[a]){document.getElementById('heroH').innerHTML=H[a];var g=document.querySelector('.hero .grid'),b=document.createElement('div');b.className='anglebar';b.innerHTML=H[a].replace('<br>',' ');g.parentNode.insertBefore(b,g);}})();</script>
    <p class="sub">Ebook <b>"Autopilot Bisnes dengan Claude AI"</b> tunjuk step by step, untuk <b>Windows &amp; MacBook</b>, cara bina "pasukan AI" yang tulis content, post ke TikTok, kawal handphone Android, baca data iklan dan follow-up lead untuk korang.</p>
    <div class="pills"><span>📄 62 muka surat</span><span>🖼️ Gambar step by step</span><span>✂️ Prompt siap salin</span><span>🇲🇾 Bahasa Melayu</span><span style="border-color:var(--o);color:#F3B39B">🎁 BONUS ebook ke-2 (48 muka surat)</span></div>
@@ -345,10 +341,8 @@ fbq('init','2749301935525051');fbq('track','PageView');
    </div>
   </div>
   <div class="vidcol">
-   <div class="vidbox">
-    <video id="vsl" playsinline preload="metadata" poster="assets/poster-n3.jpg"><source src="assets/promo-n3.mp4" type="video/mp4"></video>
-    <button class="play" id="playbtn" aria-label="Main video"><i>▶</i>Tengok cerita saya (1:49), buka bunyi 🔊</button>
-   </div>
+   <figure class="proof630"><img src="assets/proof/proof-630.jpg" alt="Planner Facebook dan 3 akaun TikTok Coach Yoi: post yang dibuat oleh AI" loading="eager">
+    <figcaption>📸 Screenshot sebenar: Planner FB + 3 akaun TikTok saya</figcaption></figure>
   </div>
  </div>
 </header>
@@ -817,8 +811,8 @@ var LINKS = {basic: STRIPE_URL, senior: "https://buy.stripe.com/bJedR81Eq23bb3g1
   });
   // video
   var v = document.getElementById('vsl'), b = document.getElementById('playbtn');
-  b.addEventListener('click', function(){ v.muted = false; v.controls = true; v.play(); b.style.display = 'none'; });
-  v.addEventListener('ended', function(){ var h = document.getElementById('pakej'); if (h) h.scrollIntoView({behavior:'smooth'}); });
+  if (v && b) { b.addEventListener('click', function(){ v.muted = false; v.controls = true; v.play(); b.style.display = 'none'; });
+  v.addEventListener('ended', function(){ var h = document.getElementById('pakej'); if (h) h.scrollIntoView({behavior:'smooth'}); }); }
   // calculator
   var hrs = document.getElementById('hrs'), rate = document.getElementById('rate');
   function fmt(n){ return n.toLocaleString('en-MY'); }
